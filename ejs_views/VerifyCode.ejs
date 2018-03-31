@@ -9,37 +9,31 @@
     
         <title>UCO CS Advisement</title>
     </head>
-    <body style="background-color:#0b2d63;margin:8px; margin-right:8px">
+    <body style="background-color:#0b2d63">
         <nav class="nav">
             <ul class="nav nav-tabs">
                 <li class ="nav-item">
-                <a class="nav-link active" href="/" style="background-color:#e5b509;color:black">Home Page</a>
+                <a class="nav-link" href="/" style="background-color:#e5b509;color:black">Home Page</a>
                 </li>
-                <% if(!user) { %>
+                <% if (user.verified == '0') { %>
                     <li class ="nav-item">
-                    <a class="nav-link" href="/SignIn" style="background-color:#e5b509;color:black">Sign In</a>
-                    </li>
-                    <li class ="nav-item">
-                    <a class="nav-link" href="/SignUp" style="background-color:#e5b509;color:black">Sign Up</a>
-                    </li>
-                <% } else if (user.verified == '0') { %>
-                    <li class ="nav-item">
-                    <a class="nav-link" href="/verifyCode" style="background-color:#e5b509;color:black">Verify Account</a>
+                    <a class="nav-link active" href="/verifyCode" style="background-color:#e5b509;color:black">Verify Account</a>
                     </li>
                 <% } %>
             </ul>
         </nav>
-        <% if (user) { %>
-            <div style='position:absolute; right: 8px; top:8px; color:white'>
-                <label>Welcome, <%= user.firstName %> <%= user.lastName %></label>
-                <br>
-                <a href="/logout" style="float: right;color:#e5b509">Log Out</a>
-            </div>
-        <% } %>
         <div style="color:white">
-            <h1><b>&nbsp;Welcome to the UCO CS Advisement Page</h1></b>
+            <h1><b>&nbsp;Enter Verification Code:</b></h1>
         </div>
-        <br>    
+        <form method="POST" action="/verifyCode">
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="text" id="code" name ="code" maxlength="6" size="8">
+            <input class="btn btn-success" type='submit' value='Validate'>
+            <% if(err){ %>
+                <label style="color:red"> Invalid Code. Please Try Again!</label>
+            <% } %>
+        </form>
+
          <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
