@@ -9,7 +9,7 @@
     
         <title>UCO CS Advisement</title>
     </head>
-    <body style="background-color:#0b2d63">
+    <body style="background-color:#0b2d63; margin:8px; margin-right:8px">
         <nav class="nav">
             <ul class="nav nav-tabs">
                 <li class ="nav-item">
@@ -22,6 +22,14 @@
                 <% } %>
             </ul>
         </nav>
+        <% if (user) { %>
+            <div style='position:absolute; right: 8px; top:8px; color:white'>
+                <label>Welcome, <%= user.firstName %> <%= user.lastName %></label>
+                <br>
+                <a href="/logout" style="float: right;color:#e5b509">Log Out</a>
+            </div>
+        <% } %>
+
         <div style="color:white">
             <h1><b>&nbsp;Enter Verification Code:</b></h1>
         </div>
