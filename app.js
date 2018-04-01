@@ -5,6 +5,7 @@ const ejs = require('ejs')
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
+const bcrypt = require('bcrypt')
 
 const app = express()
 app.set('view engine','ejs')
@@ -30,6 +31,8 @@ const GenerateCode = require('./models/GenerateCode')
 
 const UserSchema = require('./models/UserSchema')
 const UserModel = require('./models/UserModel')
+
+const saltCount = 10
 
 app.use('/public', express.static(__dirname + '/public'));
 app.use(express.urlencoded({extended: false}))
@@ -69,6 +72,7 @@ app.post("/SignIn",(req,res)=>{
     UserSchema.findOne(query,(err, results)=>{
         if (err){
             return res.status(500).send('<h1>User sign in error! Could not read database! Please contact the site administrator</h1>',err);
+        
         }
         if (results == null){
             let signIn = {
@@ -76,7 +80,7 @@ app.post("/SignIn",(req,res)=>{
                 email: null
             }
             return res.render("SignIn",{signIn})   
-        } else if (req.body.password != results.password){
+        } else if (!bcrypt.compareSync(req.body.password,results.password)){
             let signIn = {
                 error: true,
                 email: req.body.email
@@ -87,7 +91,6 @@ app.post("/SignIn",(req,res)=>{
                 firstName: results.firstName,
                 lastName: results.lastName,
                 email: results.email,
-                password: results.password,
                 isFaculty: results.isFaculty,
                 facultyID: results.facultyID,
                 studentID: results.studentID,
@@ -146,7 +149,7 @@ app.post("/SignUp",(req,res)=>{
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
-            password: req.body.password,
+            password: bcrypt.hashSync(req.body.password, saltCount),
             //double check how the isFaculty feature is working!! IWERTZ
             isFaculty: (req.body.accountType == "0") ? false : true,
             facultyID: req.body.facultyID,
@@ -197,8 +200,9 @@ app.post("/SignUp",(req,res)=>{
                 verified: false,
                 facultyVerified: false
             })
-            req.session.userInfo = user.serialize();      
-            res.render("VerifyCode", {user})
+            req.session.userInfo = user.serialize();    
+
+            res.render("VerifyCode", {user, err: false})
         })
     })
 })
