@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    
+        <title>Sign Up</title>
+    </head>
+    <body style="background-color:#0b2d63; margin:8px; margin-right:8px" onload="onSelect()">
+        <nav class="nav">
+            <ul class="nav nav-tabs">
+                <li class ="nav-item">
+                <a class="nav-link" href="/" style="background-color:#e5b509;color:black">Home Page</a>
+                </li>
+                <li class ="nav-item">
+                <a class="nav-link" href="/SignIn" style="background-color:#e5b509;color:black">Sign In</a>
+                </li>
+                <% if(!user) { %>
+                    <li class ="nav-item">
+                    <a class="nav-link active" href="/SignUp" style="background-color:#e5b509;color:black">Sign Up</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+
+        <div style="color:white">
+            <h1><b>&nbsp;Register Account</h1></b>
+        </div>
+        <br>
+        <div class="container float-left">
+            <div class="row">
+                <div class="jumobotron container float-left">
+                    <div class="display-5" style="background-color:#1a1a1a">
+                        <form name="SignUp" method="POST" action="/SignUp" onsubmit="return validateForm()">
+                            <div class="form-group row"></div>
+                            <div class="form-group row">
+                                <label for="firstName" class="col-sm-2 col-form-label" style="color: white;text-align:right">First Name</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="firstName" id="firstName" class="form-control" value='<%= user.firstName %>'>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                    <label for="lastName" class="col-sm-2 col-form-label" style="color: white;text-align:right">Last Name</label>
+                                    <div class="col-sm-8">
+                                        <input type="text" name="lastName" id="lastName" class="form-control" value='<%= user.lastName %>'>
+                                    </div>
+                                </div>
+                            <div class="form-group row">
+                                <label for="email" class="col-sm-2 col-form-label" style="color: white;text-align:right">Email</label>
+                                <div class="col-sm-8">
+                                    <input type="email" name="email" id="email" class="form-control" value='<%= user.email %>'>
+                                </div>
+                                <% if(err.error){ %>
+                                    <label class="col-sm-4 col-form-label" style="color:red;text-align:right">Email Already Used!</label>
+                                <% } %>
+                            </div>
+                            <div class="form-group row">
+                                <label for="password" class="col-sm-2 col-form-label" style="color: white;text-align:right">Password</label>
+                                <div class="col-sm-8">
+                                    <input type="password" name="password" id="password" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="accountType" class="col-sm-2 col-form-label" style="color: white;text-align:right">Account Type</label>
+                                <div class="col-sm-8">
+                                    <select id="accountType" name="accountType" class="form-control" onchange="onSelect()"> 
+                                        <option value="-1" <% if(user.accountType != "0" && user.accountType != "1") {%> selected <% } %> >-- Choose --</option>
+                                        <option value="0" <% if(user.accountType == "0") {%> selected <% } %> >Student</option>
+                                        <option value="1" <% if(user.accountType == "1") {%> selected <% } %> >Faculty</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row" id:"facultyIDRow">
+                                <label id="lbl_facultyID" for="facultyID" class="col-sm-2 col-form-label" style="Color:white;text-align:right;display:none">Faculty ID</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="facultyID" id="facultyID" class="form-control" style="display:none" value='<%= user.facultyID %>'>
+                                </div>
+                            </div>
+                            <div class="form-group row" id:"studentIDRow">
+                                <label id="lbl_studentID" for="studentID" class="col-sm-2 col-form-label" style="color:white;text-align:right;display:none">Student ID</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="studentID" id="studentID" class="form-control" style="display:none" value='<%= user.studentID %>'>
+                                </div>
+                            </div>
+                            <div class="form-group row" id:"studentMajorCodeRow">
+                                <label id="lbl_majorCode" for="majorCode" class="col-sm-2 col-form-label" style="color:white;text-align:right;display:none">Major</label>
+                                <div class="col-sm-8">
+                                    <select id="majorCode" name="majorCode" class="form-control" style="display:none"> 
+                                        <option value ="-1" <% if(user.majorcode != undefined && user.majorCode.length < 4) { %> selected <% } %> >-- Choose --</option>
+                                        <option value="6100" <% if(user.majorCode == "6100") { %> selected <% } %> >B.S. in Computer Scinece (6100)</option>
+                                        <option value="6101" <% if(user.majorCode == "6101") { %> selected <% } %> >B.S. in Computer Science - Applied (6101)</option>
+                                        <option value="6102" <% if(user.majorCode == "6102") { %> selected <% } %> >B.S. in Computer Science - Information Science (6102)</option>
+                                        <option value="6110" <% if(user.majorCode == "6110") { %> selected <% } %> >B.S. in Software Engineering (6110)</option>
+                                        <option value="6660" <% if(user.majorCode == "6660") { %> selected <% } %> >M.S. in Applied Mathematics and Computer Science (6660)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-offset-5 col-sm-10 text-center">
+                                    <input class="btn btn-success" type='submit' value='Sign Up'>
+                                </div>  
+                            </div>
+                            <div class="form-group row"></div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+         <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+        <script>
+            function onSelect() {
+                let show = 'table-row'
+                let hide = 'none'
+                
+                //Get value of the selected account type
+                let selection = document.getElementById("accountType")
+                
+                //Get object referenes to the HTML controls that will be displayed
+                let lbl_facultyID= document.getElementById("lbl_facultyID")
+                let facultyID = document.getElementById("facultyID")
+                let lbl_studentID= document.getElementById("lbl_studentID")
+                let studentID = document.getElementById("studentID")
+                let lbl_majorCode= document.getElementById("lbl_majorCode")
+                let studentMajorCode = document.getElementById("majorCode")
+                if (selection.value == "0"){
+                    //If selection is 0, then student account selected
+                    lbl_facultyID.style.display = hide
+                    facultyID.style.display = hide
+                    lbl_studentID.style.display = show
+                    studentID.style.display = show
+                    lbl_majorCode.style.display = show
+                    studentMajorCode.style.display = show
+                    
+                } else if(selection.value == "1"){
+                    //Else, a faculty account was chosen
+                    lbl_facultyID.style.display = show
+                    facultyID.style.display = show
+                    lbl_studentID.style.display = hide
+                    studentID.style.display = hide
+                    lbl_majorCode.style.display = hide
+                    studentMajorCode.style.display = hide
+                } else{
+                    lbl_facultyID.style.display = hide
+                    facultyID.style.display = hide
+                    lbl_studentID.style.display = hide
+                    studentID.style.display = hide
+                    lbl_majorCode.style.display = hide
+                    studentMajorCode.style.display = hide 
+                }
+                return true;
+            }
+
+            function validateForm(){
+                let firstName = document.getElementById("firstName")
+                let lastName = document.getElementById("lastName")
+
+                let password = document.getElementById("password")
+                let accountType = document.getElementById("accountType")
+
+                let facultyID = document.getElementById("facultyID")
+                let studentID = document.getElementById("studentID")
+                let studentMajorCode = document.getElementById("majorCode")
+
+                let error = false;
+                let errorString = "Please resolve these errors before continuing:\n"
+
+                if (firstName.length == 0  || isNumeric(firstName)){
+                    error = true
+                    errorString = errorString + "\n\t" + "First name must contain at least 1 letter"
+                }
+                if (lastName.length == 0 || isNumeric(lastName)){
+                    error = true
+                    errorString = errorString + "\n\t" + "Last name must contain at least 1 letter"
+                }
+                if (password.value.length < 6 || password.value.length > 32){
+                    error = true
+                    errorString = errorString + "\n\t" + "Password must contain 6-32 characters only"
+                }
+                if (accountType.value == "0"){ //Student account
+                    if (!isNumeric(studentID.value)){
+                        error = true
+                        errorString = errorString + "\n\t" + "Student ID must contain numeric digits only"
+                    }
+                    if (studentMajorCode.value == "-1"){
+                        error = true
+                        errorString = errorString + "\n\t" + "Please select a major"
+                    }
+                }else if (accountType.value == "1"){ //Faculty account
+                    if (facultyID.value == "null"){
+                        error = true
+                        errorString = errorString + "\n\t" + "Please enter your faculty ID number"
+                    }
+                }else{
+                    error = true
+                    errorString = errorString + "\n\t" + "Select an account Type"
+                }
+
+                if (error){
+                    alert(errorString)
+                    return false
+                }
+                return true
+            }
+            function isNumeric(n) {
+                return !isNaN(parseFloat(n)) && isFinite(n);
+            }
+        </script>
+
+    </body> 
+</html>
