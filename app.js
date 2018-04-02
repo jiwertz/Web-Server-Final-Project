@@ -2,6 +2,7 @@
 const express = require ('express')
 const session = require('express-session')
 const ejs = require('ejs')
+var bodyParser = require("body-parser");
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
@@ -25,6 +26,11 @@ const Mailer = require('./models/Mailer')
 //Mailer.sendMail(arrayOfEmails, subject title, body of email)
 //Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering')
 
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 const GenerateCode = require('./models/GenerateCode')
 //Usage: GenerateCode.getId()
 //Will return a 6 dgit alpha-numeric code
@@ -34,7 +40,6 @@ const UserModel = require('./models/UserModel')
 
 const saltCount = 10
 
-app.use('/public', express.static(__dirname + '/public'));
 app.use(express.urlencoded({extended: false}))
 
 app.use(session({
@@ -247,6 +252,12 @@ app.get("/logout",(req, res)=>{
     req.session.destroy()
     res.redirect("/")
 })
+
+app.get("/calendar",(req, res)=>{
+
+    res.render('calendar', {data})
+})
+
 
 const port = process.env.PORT || 3000
 app.listen(port, () =>{
