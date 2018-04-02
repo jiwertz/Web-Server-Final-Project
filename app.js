@@ -1,6 +1,7 @@
 const express = require ('express')
 const session = require('express-session')
 const ejs = require('ejs')
+var bodyParser = require("body-parser");
 const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
@@ -23,7 +24,10 @@ const Mailer = require('./models/Mailer')
 //Mailer.sendMail(arrayOfEmails, subject title, body of email)
 //Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering')
 
-app.use('/public', express.static(__dirname + '/public'));
+//app.use('/public', express.static(__dirname + '/public'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({extended: false}))
 
 app.use(session({
@@ -38,6 +42,12 @@ app.use(session({
 app.get("/",(req, res)=>{
     res.render('index')
 })
+
+app.get("/calendar",(req, res)=>{
+
+    res.render('calendar', {data})
+})
+
 
 const port = process.env.PORT || 3000
 app.listen(port, () =>{
