@@ -280,7 +280,8 @@ function getCalendarEvents(){
         id: "1234",
         text: "appointment",
         start_date: "04/02/2018 12:00",
-        end_date: "04/02/2018 12:10"
+        end_date: "04/02/2018 12:10",
+        booked: true
     },
     {
         id: "1235",

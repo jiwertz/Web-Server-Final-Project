@@ -4,6 +4,16 @@ html, body{
     height:100%;
     overflow:hidden;
 }
+.booked_event {
+    background-color:red;
+    border: 1px solid #778899;
+    overflow: hidden;
+}
+/* event's date information */
+.booked_event .event_date {
+    font-weight: bold;
+    padding-right: 5px;
+}
 .my_event {
     background-color: #add8e6;
     border: 1px solid #778899;
@@ -17,7 +27,6 @@ html, body{
 }
 /* styles for event content */
 .dhx_cal_event.my_event .my_event_body {
-
     padding-top: 3px;
     padding-left: 5px;
 }

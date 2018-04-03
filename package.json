@@ -1,7 +1,7 @@
 {
   "name": "jonathani_devronh_advisementscheduling",
   "version": "1.0.0",
-  "description": "",
+  "description": "An advisement appointment scheduling system for UCO's Computer Science department - this version is for the Web Server class's Final Project",
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
