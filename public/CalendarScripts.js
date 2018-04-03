@@ -5,14 +5,15 @@ function init(mode) {
     scheduler.config.first_hour = 8;
     scheduler.config.last_hour = 21;
 
-    var step = 15;
+    var step = 10;
     var format = scheduler.date.date_to_str("%h:%i");    
     scheduler.config.hour_size_px=(60/step)*22;
     
     scheduler.config.multi_day = true;
     scheduler.config.max_month_events = 5;
 
-    scheduler.xy.min_event_height = scheduler.xy.min_event_height/2
+    //default height is 40 for 60 mins, therefore 1.5=1min, so 15 is the height for a 10 min interval
+    scheduler.xy.min_event_height = 15
     
     scheduler.templates.event_class = function(start, end, event) {
         return "my_event";

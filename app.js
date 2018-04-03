@@ -279,49 +279,49 @@ function getCalendarEvents(){
         id: "1234",
         text: "appointment",
         start_date: "04/02/2018 12:00",
-        end_date: "04/02/2018 12:15"
+        end_date: "04/02/2018 12:10"
     },
     {
         id: "1235",
         text: "appointment",
-        start_date: "04/02/2018 12:15",
-        end_date: "04/02/2018 12:30"
+        start_date: "04/02/2018 12:10",
+        end_date: "04/02/2018 12:20"
     },
     {
         id: "1236",
         text: "appointment",
-        start_date: "04/02/2018 12:30",
-        end_date: "04/02/2018 12:45"
+        start_date: "04/02/2018 12:20",
+        end_date: "04/02/2018 12:30"
     },
     {
         id: "1237",
         text: "appointment",
-        start_date: "04/02/2018 12:45",
-        end_date: "04/02/2018 13:00"
+        start_date: "04/02/2018 12:30",
+        end_date: "04/02/2018 12:40"
     },
     {
         id: "1238",
         text: "appointment",
-        start_date: "04/02/2018 13:00",
-        end_date: "04/02/2018 13:15"
+        start_date: "04/02/2018 12:40",
+        end_date: "04/02/2018 12:50"
     },
     {
         id: "1239",
         text: "appointment",
-        start_date: "04/02/2018 13:15",
-        end_date: "04/02/2018 13:30"
+        start_date: "04/02/2018 12:50",
+        end_date: "04/02/2018 13:00"
     },
     {
         id: "1240",
         text: "appointment",
-        start_date: "04/02/2018 13:30",
-        end_date: "04/02/2018 13:45"
+        start_date: "04/02/2018 13:00",
+        end_date: "04/02/2018 13:10"
     },
     {
         id: "1241",
         text: "appointment",
-        start_date: "04/02/2018 13:45",
-        end_date: "04/02/2018 14:00"
+        start_date: "04/02/2018 13:10",
+        end_date: "04/02/2018 13:20"
     },
 ]
 }
