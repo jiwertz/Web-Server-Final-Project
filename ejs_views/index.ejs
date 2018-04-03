@@ -8,10 +8,11 @@
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     
-        <script src="codebase/dhtmlxscheduler.js" ></script>
-        <link rel="stylesheet" href="codebase/dhtmlxscheduler.css">
-        <link rel="stylesheet" href="CalendarStyle.css"  type="text/css">
-        <link rel="stylesheet" href="DefaultStyle.css"  type="text/css">
+        <script src="../dhtmlx-scheduler/codebase/dhtmlxscheduler.js" ></script>
+        <link rel="stylesheet" href="../dhtmlx-scheduler/codebase/dhtmlxscheduler.css">
+        <script src="../Utilities/CalendarScripts.js"></script>
+        <link rel="stylesheet" href="../Styles/CalendarStyle.css"  type="text/css">
+        <link rel="stylesheet" href="../Styles/DefaultStyle.css"  type="text/css">
 
         <title>UCO CS Advisement</title>
     </head>
@@ -59,7 +60,7 @@
             <input type="hidden" id="isFacultyVerified" value="-1"> 
         <% } %>
 
-        <div id="scheduler_here" class="dhx_cal_container" style='width:50%; height:80%;'>
+        <div id="scheduler_here" class="dhx_cal_container" style='width:55%; height:80%;'>
             <div class="dhx_cal_navline">
                 <div class="dhx_cal_prev_button">&nbsp;</div>
                 <div class="dhx_cal_next_button">&nbsp;</div>
@@ -74,8 +75,6 @@
             <div class="dhx_cal_data">
             </div>
         </div>
-
-        <script src="CalendarScripts.js"></script>
 
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
