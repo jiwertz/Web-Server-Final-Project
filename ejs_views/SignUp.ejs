@@ -6,23 +6,25 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    
+        <link rel="stylesheet" href="DefaultStyle.css"  type="text/css">
+
         <title>Sign Up</title>
     </head>
-    <body style="background-color:#0b2d63; margin:8px; margin-right:8px" onload="onSelect()">
+    <body onload="onSelect()">
         <nav class="nav">
             <ul class="nav nav-tabs">
                 <li class ="nav-item">
-                <a class="nav-link" href="/" style="background-color:#e5b509;color:black">Home Page</a>
+                <a class="nav-link" href="/">Home Page</a>
                 </li>
                 <li class ="nav-item">
-                <a class="nav-link" href="/SignIn" style="background-color:#e5b509;color:black">Sign In</a>
+                <a class="nav-link" href="/SignIn">Sign In</a>
                 </li>
-                <% if(!user) { %>
-                    <li class ="nav-item">
-                    <a class="nav-link active" href="/SignUp" style="background-color:#e5b509;color:black">Sign Up</a>
-                    </li>
-                <% } %>
+                <li class ="nav-item active">
+                <a class="nav-link" href="/SignUp">Sign Up</a>
+                </li>
+                <li class ="nav-item">
+                    <a class="nav-link" href="/calendar">View Calendar</a>
+                </li>
             </ul>
         </nav>
 

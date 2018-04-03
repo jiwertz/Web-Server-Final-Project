@@ -1,61 +1,72 @@
 <!doctype html>
 <html lang="en">
-<head>
-    
-    <meta content="text/html; charset=utf-8">
-    <script src="codebase/dhtmlxscheduler.js" ></script>
-    <link rel="stylesheet" href="codebase/dhtmlxscheduler.css">
-    <style type="text/css" media="screen">
-        html, body{
-            margin:0px;
-            padding:0px;
-            height:100%;
-            overflow:hidden;
-        }   
-    </style>
+    <head>
+        <!-- Required meta tags -->
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-<body style="background-color:#0b2d63">
-    <nav class="nav">
-        <ul class="nav nav-tabs">
-            <li class ="nav-item">
-            <a class="nav-link active" href="/" style="color:white">Home Page</a>
-            </li>
-    </nav>
-</head>
+        <script src="codebase/dhtmlxscheduler.js" ></script>
+        <link rel="stylesheet" href="codebase/dhtmlxscheduler.css">
+        <link rel="stylesheet" href="CalendarStyle.css"  type="text/css">
+        <link rel="stylesheet" href="DefaultStyle.css"  type="text/css">
+    </head>
 
+    <body onload="init('month');">
 
-<script type="text/javascript" charset="utf-8">
-    function init() {
-        scheduler.init('scheduler_here',new Date(2018,3,1),"month");
-        //scheduler.parse( data, "json")
+        <nav class="nav">
+            <ul class="nav nav-tabs">
+                <li class ="nav-item">
+                <a class="nav-link" href="/">Home Page</a>
+                </li>
+                <% if(!user) { %>
+                    <li class ="nav-item">
+                    <a class="nav-link" href="/SignIn">Sign In</a>
+                    </li>
+                    <li class ="nav-item">
+                    <a class="nav-link" href="/SignUp">Sign Up</a>
+                    </li>
+                <% } else if (user.verified == '0') { %>
+                    <li class ="nav-item">
+                    <a class="nav-link" href="/verifyCode">Verify Account</a>
+                    </li>
+                <% } %>
+                <li class ="nav-item active">
+                    <a class="nav-link" href="/calendar">View Calendar</a>
+                </li>
+            </ul>
+        </nav>
 
-        scheduler.parse(        
-            [{text: "appointment",
-        start_date: "04/01/2018 12:00",
-        end_date: "04/01/2018 12:15"
-        }], "json");
-        //scheduler.templates.xml_date = function(value){ return new Date(value); };
-        //scheduler.load("/data", "json");
+        <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
+        <% if(user){ %>
+            <input type="hidden" id="isFaculty" value="<%= user.isFaculty %>">
+            <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>"> 
+        <% } else {%>
+            <input type="hidden" id="isFaculty" value="-1">
+            <input type="hidden" id="isFacultyVerified" value="-1"> 
+        <% } %>
 
-
-    }
-</script>
-
-<body onload="init();">
-    <div id="scheduler_here" class="dhx_cal_container" style='width:100%; height:100%;'>
-        <div class="dhx_cal_navline">
-            <div class="dhx_cal_prev_button">&nbsp;</div>
-            <div class="dhx_cal_next_button">&nbsp;</div>
-            <div class="dhx_cal_today_button"></div>
-            <div class="dhx_cal_date"></div>
-            <div class="dhx_cal_tab" name="day_tab"></div>
-            <div class="dhx_cal_tab" name="week_tab"></div>
-            <div class="dhx_cal_tab" name="month_tab"></div>
+        <div id="scheduler_here" class="dhx_cal_container" style='width:100%; height:90%;'>
+            <div class="dhx_cal_navline">
+                <div class="dhx_cal_prev_button">&nbsp;</div>
+                <div class="dhx_cal_next_button">&nbsp;</div>
+                <div class="dhx_cal_today_button"></div>
+                <div class="dhx_cal_date"></div>
+                <div class="dhx_cal_tab" name="day_tab"></div>
+                <div class="dhx_cal_tab" name="week_tab"></div>
+                <div class="dhx_cal_tab" name="month_tab"></div>
+            </div>
+            <div class="dhx_cal_header">
+            </div>
+            <div class="dhx_cal_data">
+            </div>
         </div>
-        <div class="dhx_cal_header">
-        </div>
-        <div class="dhx_cal_data">
-        </div>
-    </div>
-</body>
+    </body>
+
+    <script src="CalendarScripts.js"></script>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </html>

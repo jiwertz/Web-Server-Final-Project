@@ -1,34 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        
         <!-- Required meta tags -->
-        <meta charset="utf-8">
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     
+        <script src="codebase/dhtmlxscheduler.js" ></script>
+        <link rel="stylesheet" href="codebase/dhtmlxscheduler.css">
+        <link rel="stylesheet" href="CalendarStyle.css"  type="text/css">
+        <link rel="stylesheet" href="DefaultStyle.css"  type="text/css">
+
         <title>UCO CS Advisement</title>
     </head>
-    <body style="background-color:#0b2d63; margin:8px; margin-right:8px">
+    <body onload="init('day');">
         <nav class="nav">
             <ul class="nav nav-tabs">
-                <li class ="nav-item">
-                <a class="nav-link active" href="/" style="background-color:#e5b509;color:black">Home Page</a>
+                <li class ="nav-item active">
+                <a class="nav-link" href="/">Home Page</a>
                 </li>
                 <% if(!user) { %>
                     <li class ="nav-item">
-                    <a class="nav-link" href="/SignIn" style="background-color:#e5b509;color:black">Sign In</a>
+                    <a class="nav-link" href="/SignIn">Sign In</a>
                     </li>
                     <li class ="nav-item">
-                    <a class="nav-link" href="/SignUp" style="background-color:#e5b509;color:black">Sign Up</a>
+                    <a class="nav-link" href="/SignUp">Sign Up</a>
                     </li>
                 <% } else if (user.verified == '0') { %>
                     <li class ="nav-item">
-                    <a class="nav-link" href="/verifyCode" style="background-color:#e5b509;color:black">Verify Account</a>
+                    <a class="nav-link" href="/verifyCode">Verify Account</a>
                     </li>
                 <% } %>
                 <li class ="nav-item">
-                    <a class="nav-link" href="/calendar" style="background-color:#e5b509;color:black">View Calendar</a>
+                    <a class="nav-link" href="/calendar">View Calendar</a>
                 </li>
             </ul>
         </nav>
@@ -40,10 +46,37 @@
             </div>
         <% } %>
         <div style="color:white">
-            <h1><b>&nbsp;Welcome to the UCO CS Advisement Page</h1></b>
+            <h1><b>Welcome to the UCO CS Advisement Scheduling Page</h1></b>
         </div>
         <br>    
-         <!-- Optional JavaScript -->
+
+        <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
+        <% if(user){ %>
+            <input type="hidden" id="isFaculty" value="<%= user.isFaculty %>">
+            <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>"> 
+        <% } else {%>
+            <input type="hidden" id="isFaculty" value="-1">
+            <input type="hidden" id="isFacultyVerified" value="-1"> 
+        <% } %>
+
+        <div id="scheduler_here" class="dhx_cal_container" style='width:50%; height:80%;'>
+            <div class="dhx_cal_navline">
+                <div class="dhx_cal_prev_button">&nbsp;</div>
+                <div class="dhx_cal_next_button">&nbsp;</div>
+                <div class="dhx_cal_today_button"></div>
+                <div class="dhx_cal_date"></div>
+                <div class="dhx_cal_tab" name="day_tab"></div>
+                <div class="dhx_cal_tab" name="week_tab"></div>
+                <div class="dhx_cal_tab" name="month_tab"></div>
+            </div>
+            <div class="dhx_cal_header">
+            </div>
+            <div class="dhx_cal_data">
+            </div>
+        </div>
+
+        <script src="CalendarScripts.js"></script>
+
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

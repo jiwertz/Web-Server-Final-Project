@@ -1,0 +1,13 @@
+html, body {
+    background-color:#0b2d63; 
+    margin:8px; 
+    margin-right:8px"
+}
+.nav-link {
+    background-color:#e5b509;
+    color:black
+}
+.active a {
+    background-color:#ffc702;
+    color:black
+}

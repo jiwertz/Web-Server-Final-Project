@@ -56,7 +56,8 @@ app.get("/",(req, res)=>{
         req.session.userInfo = null
     }
     let user = req.session.userInfo
-    res.render('index',{user})
+    let data = getCalendarEvents()
+    res.render('index',{user, data})
 })
 
 app.get("/SignIn",(req,res)=>{
@@ -254,8 +255,16 @@ app.get("/logout",(req, res)=>{
 })
 
 app.get("/calendar",(req, res)=>{
+    if (!req.session.userInfo){
+        req.session.userInfo = null
+    }
+    let user = req.session.userInfo
+    let data = getCalendarEvents()
+    res.render('calendar', {user, data})
+})
 
-    res.render('calendar', {data})
+app.post("/SignUpAdvisement", (req,res)=>{
+    res.redirect("/")
 })
 
 
@@ -263,3 +272,56 @@ const port = process.env.PORT || 3000
 app.listen(port, () =>{
     console.log('Server is running at port', port)
 })
+
+function getCalendarEvents(){
+    return [
+    {
+        id: "1234",
+        text: "appointment",
+        start_date: "04/02/2018 12:00",
+        end_date: "04/02/2018 12:15"
+    },
+    {
+        id: "1235",
+        text: "appointment",
+        start_date: "04/02/2018 12:15",
+        end_date: "04/02/2018 12:30"
+    },
+    {
+        id: "1236",
+        text: "appointment",
+        start_date: "04/02/2018 12:30",
+        end_date: "04/02/2018 12:45"
+    },
+    {
+        id: "1237",
+        text: "appointment",
+        start_date: "04/02/2018 12:45",
+        end_date: "04/02/2018 13:00"
+    },
+    {
+        id: "1238",
+        text: "appointment",
+        start_date: "04/02/2018 13:00",
+        end_date: "04/02/2018 13:15"
+    },
+    {
+        id: "1239",
+        text: "appointment",
+        start_date: "04/02/2018 13:15",
+        end_date: "04/02/2018 13:30"
+    },
+    {
+        id: "1240",
+        text: "appointment",
+        start_date: "04/02/2018 13:30",
+        end_date: "04/02/2018 13:45"
+    },
+    {
+        id: "1241",
+        text: "appointment",
+        start_date: "04/02/2018 13:45",
+        end_date: "04/02/2018 14:00"
+    },
+]
+}

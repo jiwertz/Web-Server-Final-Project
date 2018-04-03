@@ -6,20 +6,22 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    
+        <link rel="stylesheet" href="DefaultStyle.css"  type="text/css">
+
         <title>UCO CS Advisement</title>
     </head>
-    <body style="background-color:#0b2d63; margin:8px; margin-right:8px">
+    <body>
         <nav class="nav">
             <ul class="nav nav-tabs">
                 <li class ="nav-item">
-                <a class="nav-link" href="/" style="background-color:#e5b509;color:black">Home Page</a>
+                <a class="nav-link" href="/">Home Page</a>
                 </li>
-                <% if (user.verified == '0') { %>
-                    <li class ="nav-item">
-                    <a class="nav-link active" href="/verifyCode" style="background-color:#e5b509;color:black">Verify Account</a>
-                    </li>
-                <% } %>
+                <li class ="nav-item active">
+                <a class="nav-link" href="/verifyCode">Verify Account</a>
+                </li>
+                <li class ="nav-item">
+                    <a class="nav-link" href="/calendar">View Calendar</a>
+                </li>
             </ul>
         </nav>
         <% if (user) { %>
