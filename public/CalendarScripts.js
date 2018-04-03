@@ -10,7 +10,7 @@ function init(mode) {
     scheduler.config.hour_size_px=(60/step)*22;
     
     scheduler.config.multi_day = true;
-    scheduler.config.max_month_events = 5;
+    scheduler.config.max_month_events = 3;
 
     //default height is 40 for 60 mins, therefore 1.5=1min, so 15 is the height for a 10 min interval
     scheduler.xy.min_event_height = 15
