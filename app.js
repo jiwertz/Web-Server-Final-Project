@@ -323,5 +323,29 @@ function getCalendarEvents(){
         start_date: "04/02/2018 13:10",
         end_date: "04/02/2018 13:20"
     },
+        {
+        id: "1242",
+        text: "appointment",
+        start_date: "04/02/2018 13:20",
+        end_date: "04/02/2018 13:30"
+    },
+    {
+        id: "1243",
+        text: "appointment",
+        start_date: "04/02/2018 13:30",
+        end_date: "04/02/2018 13:40"
+    },
+    {
+        id: "1244",
+        text: "appointment",
+        start_date: "04/02/2018 13:40",
+        end_date: "04/02/2018 13:50"
+    },
+    {
+        id: "1245",
+        text: "appointment",
+        start_date: "04/02/2018 13:50",
+        end_date: "04/02/2018 14:00"
+    }
 ]
 }
