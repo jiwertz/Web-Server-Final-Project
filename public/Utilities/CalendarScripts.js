@@ -127,10 +127,7 @@ function init(mode) {
             let form = document.createElement("form")
             form.setAttribute("method", "POST")
             form.setAttribute("action", "/SignUpAdvisement")
-            let appointmentID = document.createElement("input")
-            appointmentID.setAttribute("type", "hidden")
-            appointmentID.setAttribute("name", "id")
-            appointmentID.setAttribute("value",scheduler.getState().lightbox_id)
+            let appointmentID = createHiddenInput("id",scheduler.getState().lightbox_id)
             form.appendChild(appointmentID)
             document.body.appendChild(form)
             //Send the form with POST method to the server!!!
@@ -182,4 +179,12 @@ function init(mode) {
     scheduler.attachEvent("onEventDeleted",(id,e)=>{
         //Send message back to the server to delete the event from the database
     })
+}
+
+function createHiddenInput(name, value){
+    let element = document.createElement("input")
+    element.setAttribute("type", "hidden")
+    element.setAttribute("name", name)
+    element.setAttribute("value",value)
+    return element
 }
