@@ -82,15 +82,13 @@ function init(mode) {
 
     //Only display the details small icon on left hand side when in calendar day/week view
     scheduler.config.icons_select = []
-    //Get references to the hidden fields used to determine admin rights
-    let isFaculty = document.getElementById("isFaculty")
-    let facultyVerified = document.getElementById("isFacultyVerified")
+
     //Check to see if current user is a verified faculty member
-    if (isFaculty.value == '1' && facultyVerified.value == '1'){
+    if (isFaculty()){
         //Display the edit and delete icons as well on the day/week view when hovering on calendar event
         //scheduler.config.icons_select = ["icon_details","icon_edit", "icon_delete"]
     }
-    else if (isFaculty.value == '0'){
+    else if (isStudent()){
         //Enable some drag events for a faculty member
         scheduler.config.drag_move = false;
         scheduler.config.drag_create = false;
@@ -138,9 +136,7 @@ function init(mode) {
     });
     //Before allowing an event change, validate the current user is a validated faculty member
     scheduler.attachEvent("onBeforeEventChanged",(id,e)=>{
-        let isFaculty = document.getElementById("isFaculty")
-        let facultyVerified = document.getElementById("isFacultyVerified")
-        if (isFaculty.value == '1' && facultyVerified.value == '1'){
+        if (isFaculty()){
             return true;
         }
         else{
@@ -149,9 +145,7 @@ function init(mode) {
     })
     //Before allowing an event creation, validate the current user is a validated faculty member
     scheduler.attachEvent("onBeforeEventCreated",(id,e)=>{
-        let isFaculty = document.getElementById("isFaculty")
-        let facultyVerified = document.getElementById("isFacultyVerified")
-        if (isFaculty.value == '1' && facultyVerified.value == '1'){
+        if (isFaculty()){
             return true;
         }
         else{
@@ -160,9 +154,7 @@ function init(mode) {
     })
     //Before allowing an event deletion, validate the current user is a validated faculty member
     scheduler.attachEvent("onBeforeEventDelete",(id,e)=>{
-        let isFaculty = document.getElementById("isFaculty")
-        let facultyVerified = document.getElementById("isFacultyVerified")
-        if (isFaculty.value == '1' && facultyVerified.value == '1'){
+        if (isFaculty()){
             return true;
         }
         else{
@@ -187,4 +179,28 @@ function createHiddenInput(name, value){
     element.setAttribute("name", name)
     element.setAttribute("value",value)
     return element
+}
+
+function isFaculty(){
+    //Get references to the hidden fields to determine if the current user is a verified faculty member
+    let isFaculty = document.getElementById("isFaculty")
+    let facultyVerified = document.getElementById("isFacultyVerified")
+    if (isFaculty.value == 'true' && facultyVerified.value == 'true'){
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+function isStudent(){
+    //Get references to the hidden fields used to determine if the current user is a verified stduent
+    let isFaculty = document.getElementById("isFaculty")
+    let isVerified = document.getElementById("isVerified")
+    if (isFaculty.value == 'false' && isVerified.value == 'true'){
+        return true;
+    }
+    else{
+        return false;
+    }
 }

@@ -5,6 +5,7 @@ html, body{
     overflow:hidden;
 }
 .booked_event {
+    color: black;
     background-color:red;
     border: 1px solid #778899;
     overflow: hidden;

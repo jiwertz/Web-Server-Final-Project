@@ -3,7 +3,6 @@ const express = require ('express')
 const session = require('express-session')
 const ejs = require('ejs')
 var bodyParser = require("body-parser");
-const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
@@ -11,6 +10,8 @@ const bcrypt = require('bcrypt')
 const app = express()
 app.set('view engine','ejs')
 app.set('views','./ejs_views')
+
+app.use(express.urlencoded({extended: false}))
 
 //Import class used to update the server's email authentication
 const UpdateServerEmail = require('./models/UpdateServerEmail')
@@ -26,11 +27,12 @@ const Mailer = require('./models/Mailer')
 //Mailer.sendMail(arrayOfEmails, subject title, body of email)
 //Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering')
 
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+const multerUtility = require('./public/Utilities/MulterUtility')
 
 const GenerateCode = require('./models/GenerateCode')
 //Usage: GenerateCode.getId()
@@ -40,8 +42,6 @@ const UserSchema = require('./models/UserSchema')
 const UserModel = require('./models/UserModel')
 
 const saltCount = 10
-
-app.use(express.urlencoded({extended: false}))
 
 app.use(session({
     secret: 'UCOCSADVISEMENT',
@@ -53,10 +53,11 @@ app.use(session({
 }))
 
 app.get("/",(req, res)=>{
-    if (!req.session.userInfo){
-        req.session.userInfo = null
+    let user = null
+    if (req.session.userInfo){
+        user =  UserModel.deserialize(req.session.userInfo)
     }
-    let user = req.session.userInfo
+    console.log(user)
     let data = getCalendarEvents()
     res.render('index',{user, data})
 })
@@ -94,19 +95,7 @@ app.post("/SignIn",(req,res)=>{
             }
             return res.render("SignIn",{signIn})
         } else{
-            let user = new UserModel({
-                firstName: results.firstName,
-                lastName: results.lastName,
-                email: results.email,
-                isFaculty: results.isFaculty,
-                facultyID: results.facultyID,
-                studentID: results.studentID,
-                majorCode: results.majorCode,
-                profilePic: results.profilePic,
-                verifyCode: results.verifyCode,
-                verified: results.verified,
-                facultyVerified: results.facultyVerified
-            })
+            let user = new UserModel(results)
             req.session.userInfo = user.serialize()
             res.redirect("/")
         }
@@ -117,16 +106,16 @@ app.get("/SignUp",(req,res)=>{
     let user = null;
     if (!req.session.userInfo){
         user = {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            accountType: req.body.accountType,
-            facultyID: req.body.facultyID,
-            studentID: req.body.studentID,
-            majorCode: req.body.majorCode,
+            firstName: null,
+            lastName: null,
+            email: null,
+            accountType: null,
+            facultyID: null,
+            studentID: null,
+            majorCode: null
         }
     } else{
-        user = req.session.userInfo
+        user =  UserModel.deserialize(req.session.userInfo)
     }
     let err = {error: false}
     res.render('SignUp',{user, err})
@@ -249,17 +238,17 @@ app.post("/verifyCode",(req,res)=>{
 
 app.get("/logout",(req, res)=>{
     if (!req.session.userInfo){
-        return req.redirect("/")
+        return res.redirect("/")
     }
     req.session.destroy()
     res.redirect("/")
 })
 
 app.get("/calendar",(req, res)=>{
-    if (!req.session.userInfo){
-        req.session.userInfo = null
+    let user = null
+    if (req.session.userInfo){
+        user =  UserModel.deserialize(req.session.userInfo)   
     }
-    let user = req.session.userInfo
     let data = getCalendarEvents()
     res.render('calendar', {user, data})
 })
@@ -268,6 +257,61 @@ app.post("/SignUpAdvisement", (req,res)=>{
     res.redirect("/")
 })
 
+app.get("/editProfile",(req, res)=>{
+    if (!req.session.userInfo){
+        return res.redirect("/")
+    }
+    let user = UserModel.deserialize(req.session.userInfo);
+    
+    res.render('ProfileEdit', {user})
+    
+})
+
+app.post("/editProfile", (req, res)=>{
+    if (!req.session.userInfo){
+        req.redirect("/")
+    }
+    multerUtility.uploadPicture(req, res, (err) =>{
+        if (err){
+            console.log(err)
+            return res.status(500).send('<h1>Unable to upload file to server</h1>')
+        }
+        const query = {_id: req.body._id}
+        let update = {
+            $set: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                facultyID: req.body.facultyID,
+                studentID: req.body.studentID,
+                majorCode: req.body.majorCode,
+            }
+        }
+        if (req.file){
+            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+        }
+        if (req.body.password != ''){
+            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+        }
+        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
+            if (err){
+                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
+                return res.status(500).send('<h1>Internal DB Error</h1>')
+            }
+            if (req.file){
+                console.log(req.body.image_path)
+                if (req.body.image_path != ''){
+                    console.log('delete old picture')
+                    fs.unlink(req.body.image_path)
+                }
+                let user = UserModel.deserialize(req.session.userInfo)
+                user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+                req.session.userInfo = user.serialize()
+            }
+            res.redirect("/")
+        })
+    })
+})
 
 const port = process.env.PORT || 3000
 app.listen(port, () =>{

@@ -1,0 +1,18 @@
+<div style='position:absolute; right: 8px; top:8px; color:white;'>
+    <label>Welcome, <%= user.firstName %> <%= user.lastName %></label>
+</div>
+<div style="position:absolute; right: 8px; top: 35px">
+    <a href="/editProfile">
+    <% if (user.profilePic == "" || user.profilePic == null) { %>
+        <img src="./Static_Images/addPicture.png" width="75" height="75" style="float: right">
+    <% } else { %>
+        <img src='<%= user.profilePic.replace("/public","") %>' width="75" height="75" style="float: right">
+    <% } %>
+    </a>
+</div>
+<div style="position:absolute; right: 90px; top: 35px">
+        <a href="/editProfile" style="float: right;color:#e5b509">Edit Profile</a>
+    </div>
+<div style="position:absolute; right: 90px; top: 60px">
+    <a href="/logout" style="float: right;color:#e5b509">Log Out</a>
+</div>

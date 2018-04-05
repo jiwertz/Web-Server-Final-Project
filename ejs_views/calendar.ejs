@@ -42,13 +42,21 @@
         <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
         <% if(user){ %>
             <input type="hidden" id="isFaculty" value="<%= user.isFaculty %>">
-            <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>"> 
+            <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>">
+            <input type="hidden" id="isVerified" value="<%= user.verified %>">
         <% } else {%>
-            <input type="hidden" id="isFaculty" value="-1">
-            <input type="hidden" id="isFacultyVerified" value="-1"> 
+            <input type="hidden" id="isFaculty" value="false">
+            <input type="hidden" id="isFacultyVerified" value="false"> 
+            <input type="hidden" id="isVerified" value="false">
         <% } %>
 
-        <div id="scheduler_here" class="dhx_cal_container" style='width:100%; height:90%;'>
+        <!-- If logged in user, display the user menu in the right hand corner -->
+        <% if (user) { %>
+            <% include ./partials/profileMenu %>
+        <% } %>
+        
+        <br><br>
+        <div id="scheduler_here" class="dhx_cal_container" style='position:relative; width:100%; height:85%;'>
             <div class="dhx_cal_navline">
                 <div class="dhx_cal_prev_button">&nbsp;</div>
                 <div class="dhx_cal_next_button">&nbsp;</div>
