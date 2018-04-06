@@ -32,12 +32,17 @@
             <h1><b>&nbsp;Register Account</h1></b>
         </div>
         <br>
+        <% if(messages && messages.length > 0) { %>
+            <div class="alert alert-danger" role="alert">Sign Up Error: <%= messages %></div>
+        <% } %>
         <div class="container float-left">
             <div class="row">
                 <div class="jumobotron container float-left">
                     <div class="display-5" style="background-color:#1a1a1a">
                         <form name="SignUp" method="POST" action="/SignUp" onsubmit="return validateForm()">
-                            <div class="form-group row"></div>
+                            <div class="form-group row">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            </div>
                             <div class="form-group row">
                                 <label for="firstName" class="col-sm-2 col-form-label" style="color: white;text-align:right">First Name</label>
                                 <div class="col-sm-8">
@@ -55,9 +60,6 @@
                                 <div class="col-sm-8">
                                     <input type="email" name="email" id="email" class="form-control" value='<%= user.email %>'>
                                 </div>
-                                <% if(err.error){ %>
-                                    <label class="col-sm-4 col-form-label" style="color:red;text-align:right">Email Already Used!</label>
-                                <% } %>
                             </div>
                             <div class="form-group row">
                                 <label for="password" class="col-sm-2 col-form-label" style="color: white;text-align:right">Password</label>

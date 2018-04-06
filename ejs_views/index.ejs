@@ -52,7 +52,12 @@
         <div style="color:white">
             <h1><b>Welcome to the UCO CS Advisement Scheduling Page</h1></b>
         </div>
-        <br>    
+        <% if(verifyMessage && verifyMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= verifyMessage %></div>
+        <% } %>
+        <% if(loginMessage && loginMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= loginMessage %></div>
+        <% } %>
 
         <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
         <% if(user){ %>
