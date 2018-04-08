@@ -163,6 +163,21 @@ function init(mode) {
     })
     scheduler.attachEvent("onEventChanged",(id,e)=>{
         //Send message back to the server to update the event's details in the database
+        let form = document.createElement("form")
+        form.setAttribute("method", "POST")
+        form.setAttribute("action", "/add")
+        let eventid = createHiddenInput("id", id)
+        let startDate = createHiddenInput("start_date", e.start_date)
+        let endDate = createHiddenInput("end_date", e.end_date)
+        let text = createHiddenInput("text", e.text)
+        form.appendChild(eventid)
+        form.appendChild(startDate)
+        form.appendChild(endDate)
+        form.appendChild(text)
+
+        document.body.appendChild(form)
+        //Send the form with POST method to the server!!!
+        form.submit()
     })
     scheduler.attachEvent("onEventCreated",(id,e)=>{
         //Send message back to the server to add a new event to the database
@@ -170,6 +185,14 @@ function init(mode) {
     })
     scheduler.attachEvent("onEventDeleted",(id,e)=>{
         //Send message back to the server to delete the event from the database
+        let form = document.createElement("form")
+        form.setAttribute("method", "POST")
+        form.setAttribute("action", "/remove")
+        let eventid = createHiddenInput("id", id)
+        form.appendChild(eventid)
+        document.body.appendChild(form)
+        //Send the form with POST method to the server!!!
+        form.submit()
     })
 }
 
