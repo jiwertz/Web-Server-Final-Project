@@ -7,7 +7,6 @@ const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
 const csrf = require('csurf')
-
 const passport = require('passport')
 const flash = require('connect-flash')
 const cookieParser = require('cookie-parser')
@@ -51,12 +50,64 @@ app.use(session({
         maxAge: 60*60*1000 //Cookie lasts for 1 hour
     }
 }))
+
 app.use(flash());
 app.use(passport.initialize())
 app.use(passport.session())
-app.use(csrf())
 
 require('./config/passport');
+
+app.post("/SignUpAdvisement", (req,res)=>{
+    res.redirect("/")
+})
+
+app.post("/editProfile", (req, res)=>{
+    if (!req.session.userInfo){
+        console.log("redirecting")
+        req.redirect("/")
+    }
+    multerUtility.uploadPicture(req, res, (err) =>{
+        if (err){
+            return res.status(500).send('<h1>Unable to upload file to server</h1>')
+        }
+        const query = {_id: req.body._id}
+        let update = {
+            $set: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                facultyID: req.body.facultyID,
+                studentID: req.body.studentID,
+                majorCode: req.body.majorCode,
+            }
+        }
+        if (req.file){
+            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+        }
+        if (req.body.password != ''){
+            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+        }
+        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
+            if (err){
+                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
+                return res.status(500).send('<h1>Internal DB Error</h1>')
+            }
+            if (req.file){
+                if (req.body.image_path != ''){
+                    fs.unlink(req.body.image_path)
+                }
+            }
+            let user = new UserModel(result)
+            console.log("user", user)
+            req.session.userInfo = user.serialize()
+            res.redirect("/")
+        })
+    })
+})
+
+//Any app.get() or app.post() above this point doesn't fall victim to the csurf middleware
+app.use(csrf())
+//Any app.get or app.post beyond this point falls victim to the csurf middleware
 
 app.get("/", (req, res)=>{
     let user = null
@@ -146,59 +197,9 @@ app.get("/calendar", (req, res)=>{
     res.render('calendar', {user, data})
 })
 
-app.post("/SignUpAdvisement", (req,res)=>{
-    res.redirect("/")
-})
-
 app.get("/editProfile", isLoggedIn, (req, res)=>{
     let user = UserModel.deserialize(req.session.userInfo);
     res.render('ProfileEdit', {user, csrfToken: req.csrfToken()})
-})
-
-app.post("/editProfile", (req, res)=>{
-    if (!req.session.userInfo){
-        req.redirect("/")
-    }
-    multerUtility.uploadPicture(req, res, (err) =>{
-        if (err){
-            console.log(err)
-            return res.status(500).send('<h1>Unable to upload file to server</h1>')
-        }
-        const query = {_id: req.body._id}
-        let update = {
-            $set: {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                facultyID: req.body.facultyID,
-                studentID: req.body.studentID,
-                majorCode: req.body.majorCode,
-            }
-        }
-        if (req.file){
-            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
-        }
-        if (req.body.password != ''){
-            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
-        }
-        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
-            if (err){
-                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
-                return res.status(500).send('<h1>Internal DB Error</h1>')
-            }
-            if (req.file){
-                console.log(req.body.image_path)
-                if (req.body.image_path != ''){
-                    console.log('delete old picture')
-                    fs.unlink(req.body.image_path)
-                }
-                let user = UserModel.deserialize(req.session.userInfo)
-                user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
-                req.session.userInfo = user.serialize()
-            }
-            res.redirect("/")
-        })
-    })
 })
 
 const port = process.env.PORT || 3000
@@ -215,79 +216,23 @@ function isLoggedIn(req, res, next) {
 }
 
 function getCalendarEvents(){
-    return [
-    {
-        id: "1234",
-        text: "appointment",
-        start_date: "04/02/2018 12:00",
-        end_date: "04/02/2018 12:10",
-        booked: true
-    },
-    {
-        id: "1235",
-        text: "appointment",
-        start_date: "04/02/2018 12:10",
-        end_date: "04/02/2018 12:20"
-    },
-    {
-        id: "1236",
-        text: "appointment",
-        start_date: "04/02/2018 12:20",
-        end_date: "04/02/2018 12:30"
-    },
-    {
-        id: "1237",
-        text: "appointment",
-        start_date: "04/02/2018 12:30",
-        end_date: "04/02/2018 12:40"
-    },
-    {
-        id: "1238",
-        text: "appointment",
-        start_date: "04/02/2018 12:40",
-        end_date: "04/02/2018 12:50"
-    },
-    {
-        id: "1239",
-        text: "appointment",
-        start_date: "04/02/2018 12:50",
-        end_date: "04/02/2018 13:00"
-    },
-    {
-        id: "1240",
-        text: "appointment",
-        start_date: "04/02/2018 13:00",
-        end_date: "04/02/2018 13:10"
-    },
-    {
-        id: "1241",
-        text: "appointment",
-        start_date: "04/02/2018 13:10",
-        end_date: "04/02/2018 13:20"
-    },
-    {
-        id: "1242",
-        text: "appointment",
-        start_date: "04/02/2018 13:20",
-        end_date: "04/02/2018 13:30"
-    },
-    {
-        id: "1243",
-        text: "appointment",
-        start_date: "04/02/2018 13:30",
-        end_date: "04/02/2018 13:40"
-    },
-    {
-        id: "1244",
-        text: "appointment",
-        start_date: "04/02/2018 13:40",
-        end_date: "04/02/2018 13:50"
-    },
-    {
-        id: "1245",
-        text: "appointment",
-        start_date: "04/02/2018 13:50",
-        end_date: "04/02/2018 14:00"
-    }
-]
+   return [
+       {
+           text: "appointment",
+           description: "desc1",
+           start_date: "04/07/2018 09:00",
+           end_date: "04/07/2018 09:10"
+       }
+    ]
 }
+
+// // Create router[s] which will bypass the csrf token validation. This must come before app.use(csrf())
+// let api = createApiRouter()
+// app.use("/SignUpAdvisement", api)
+// function createApiRouter() {
+//     let router = new express.Router()
+//     router.post("/SignUpAdvisement", (req,res)=>{
+//         res.redirect("/")
+//     })
+//     return router
+// }

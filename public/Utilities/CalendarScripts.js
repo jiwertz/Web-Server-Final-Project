@@ -106,6 +106,21 @@ function init(mode) {
         scheduler.config.buttons_left = ["dhx_cancel_btn"]
     }
 
+    scheduler.attachEvent("onLightbox",function(id){
+        //If current user is not a verified faculty member, then lock the description and time fields.
+        if (!isFaculty()){
+            let text = scheduler.formSection("description")
+            let textarea = text.node.querySelector("textarea")
+            textarea.setAttribute("disabled",true)
+
+            let time = scheduler.formSection("time")
+            let timeArea = time.node.querySelectorAll("select")
+            for (let i = 0; i < timeArea.length; i++){
+                timeArea[i].setAttribute("disabled",true)
+            }
+        }
+    })
+
     //Add an event listener that prevents the light box from appearing if the event is already booked.
     scheduler.attachEvent("onBeforeLightBox", function(id){
         let event = scheduler.getEvent(id)
@@ -113,7 +128,7 @@ function init(mode) {
             return false;   
         } 
         else{
-            return true;
+            return true
         }
     })
     
