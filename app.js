@@ -6,7 +6,7 @@ var bodyParser = require("body-parser");
 const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
-//const csrf = require('csurf')
+const csrf = require('csurf')
 
 const passport = require('passport')
 const flash = require('connect-flash')
@@ -53,12 +53,64 @@ app.use(session({
         maxAge: 60*60*1000 //Cookie lasts for 1 hour
     }
 }))
+
 app.use(flash());
 app.use(passport.initialize())
 app.use(passport.session())
-// app.use(csrf())
 
 require('./config/passport');
+
+app.post("/SignUpAdvisement", (req,res)=>{
+    res.redirect("/")
+})
+
+app.post("/editProfile", (req, res)=>{
+    if (!req.session.userInfo){
+        console.log("redirecting")
+        req.redirect("/")
+    }
+    multerUtility.uploadPicture(req, res, (err) =>{
+        if (err){
+            return res.status(500).send('<h1>Unable to upload file to server</h1>')
+        }
+        const query = {_id: req.body._id}
+        let update = {
+            $set: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                facultyID: req.body.facultyID,
+                studentID: req.body.studentID,
+                majorCode: req.body.majorCode,
+            }
+        }
+        if (req.file){
+            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+        }
+        if (req.body.password != ''){
+            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+        }
+        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
+            if (err){
+                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
+                return res.status(500).send('<h1>Internal DB Error</h1>')
+            }
+            if (req.file){
+                if (req.body.image_path != ''){
+                    fs.unlink(req.body.image_path)
+                }
+            }
+            let user = new UserModel(result)
+            console.log("user", user)
+            req.session.userInfo = user.serialize()
+            res.redirect("/")
+        })
+    })
+})
+
+//Any app.get() or app.post() above this point doesn't fall victim to the csurf middleware
+app.use(csrf())
+//Any app.get or app.post beyond this point falls victim to the csurf middleware
 
 app.get("/", (req, res)=>{
     let user = null
@@ -156,57 +208,10 @@ app.get("/calendar", (req, res)=>{
 
 })
 
-app.post("/SignUpAdvisement", (req,res)=>{
-    res.redirect("/")
-})
-
 app.get("/editProfile", isLoggedIn, (req, res)=>{
     let user = UserModel.deserialize(req.session.userInfo);
     //res.render('ProfileEdit', {user, csrfToken: req.csrfToken()})
     res.render('ProfileEdit', {user})
-})
-
-app.post("/editProfile", (req, res)=>{
-    if (!req.session.userInfo){
-        req.redirect("/")
-    }
-    multerUtility.uploadPicture(req, res, (err) =>{
-        if (err){
-            return res.status(500).send('<h1>Unable to upload file to server</h1>')
-        }
-        const query = {_id: req.body._id}
-        let update = {
-            $set: {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                facultyID: req.body.facultyID,
-                studentID: req.body.studentID,
-                majorCode: req.body.majorCode,
-            }
-        }
-        if (req.file){
-            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
-        }
-        if (req.body.password != ''){
-            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
-        }
-        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
-            if (err){
-                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
-                return res.status(500).send('<h1>Internal DB Error</h1>')
-            }
-            if (req.file){
-                if (req.body.image_path != ''){
-                    fs.unlink(req.body.image_path)
-                }
-                let user = UserModel.deserialize(req.session.userInfo)
-                user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
-                req.session.userInfo = user.serialize()
-            }
-            res.redirect("/")
-        })
-    })
 })
 
 const port = process.env.PORT || 3000
@@ -233,14 +238,6 @@ app.get("/addAppointments", isLoggedIn, (req, res)=>
 })
 app.post("/addAppointments", (req, res)=>
 {
-//    let stdt= new Date(new Date(appointment_entry.start_date)-offset).toISOString().substring(0,16).replace('T',' ').replace("-","/").replace("-","/")
-    let offset = (new Date()).getTimezoneOffset()* 60000
-    d1 = new Date(new Date(new Date(req.body.date + " " + req.body.start_date)) - offset).toISOString().substring(0,16).replace('T',' ').replace("-","/").replace("-","/")
-    d1 = d1.substring(5,10) + '/' +d1.substring(0,4) + ' ' + d1.substring(11,16)
-    d2 = new Date(new Date(new Date(req.body.date + " " + req.body.end_date)) - offset).toISOString().substring(0,16).replace('T',' ').replace("-","/").replace("-","/")
-    d2 = d2.substring(5,10) + '/' +d2.substring(0,4) + ' ' + d2.substring(11,16)
-    
-    
     let MINUTES = 0;
     let HOURS = parseInt(req.body.end_date.substring(0, 2)) - parseInt(req.body.start_date.substring(0, 2))
     let begMINUTES = parseInt(req.body.start_date.substring(3, 5))
@@ -264,12 +261,11 @@ app.post("/addAppointments", (req, res)=>
 
     MINUTES = MINUTES + HOURS * 60;
     let num_of_appointments = MINUTES / 10;
-    var x;
+    let x;
     let data = []
 
     for(x = 0; x < num_of_appointments; x++)
     {
-        
         if(begMINUTES >= 60)
         {
             begMINUTES = begMINUTES - 60
@@ -297,17 +293,8 @@ app.post("/addAppointments", (req, res)=>
     }
     console.log(data)
     AppointmentSchema.insertMany(data)
-
- //d1 = new Date(d1)
- //d1.setTime(d1.getTime() + 10 * 60000)
-// d1 = new Date(new Date(new Date(d1)) - offset).toISOString().substring(0,16).replace('T',' ').replace("-","/").replace("-","/")
-// d1 = new Date(d1.substring(5,10) + '/' +d1.substring(0,4) + ' ' + d1.substring(11,16))
     
- console.log(d1)
     res.redirect("/")
-
-    //new Date('04/02/2018 12:05')
-//ret.setTime(ret.getTime() + units*60000); 
 
 })
 
