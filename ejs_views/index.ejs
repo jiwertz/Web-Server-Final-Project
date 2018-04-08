@@ -16,7 +16,7 @@
 
         <title>UCO CS Advisement</title>
     </head>
-    <body onload="init('day');">
+    <body onload="init('week');">
         <nav class="nav">
             <ul class="nav nav-tabs">
                 <li class ="nav-item active">
@@ -33,31 +33,41 @@
                     <li class ="nav-item">
                     <a class="nav-link" href="/verifyCode">Verify Account</a>
                     </li>
+                <% } else { %>
+                    <li class ="nav-item">
+                        <a class="nav-link" href="/editProfile">Edit Profile</a>
+                    </li>
                 <% } %>
                 <li class ="nav-item">
                     <a class="nav-link" href="/calendar">View Calendar</a>
                 </li>
             </ul>
         </nav>
+        
+        <!-- If logged in user, display the user menu in the right hand corner -->
         <% if (user) { %>
-            <div style='position:absolute; right: 8px; top:8px; color:white'>
-                <label>Welcome, <%= user.firstName %> <%= user.lastName %></label>
-                <br>
-                <a href="/logout" style="float: right;color:#e5b509">Log Out</a>
-            </div>
+            <% include ./partials/profileMenu %>
         <% } %>
+
         <div style="color:white">
             <h1><b>Welcome to the UCO CS Advisement Scheduling Page</h1></b>
         </div>
-        <br>    
+        <% if(verifyMessage && verifyMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= verifyMessage %></div>
+        <% } %>
+        <% if(loginMessage && loginMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= loginMessage %></div>
+        <% } %>
 
         <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
         <% if(user){ %>
             <input type="hidden" id="isFaculty" value="<%= user.isFaculty %>">
             <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>"> 
+            <input type="hidden" id="isVerified" value="<%= user.verified %>">
         <% } else {%>
-            <input type="hidden" id="isFaculty" value="-1">
-            <input type="hidden" id="isFacultyVerified" value="-1"> 
+            <input type="hidden" id="isFaculty" value="false">
+            <input type="hidden" id="isFacultyVerified" value="false">
+            <input type="hidden" id="isVerified" value="false">
         <% } %>
 
         <div id="scheduler_here" class="dhx_cal_container" style='width:55%; height:80%;'>
@@ -65,6 +75,7 @@
                 <div class="dhx_cal_prev_button">&nbsp;</div>
                 <div class="dhx_cal_next_button">&nbsp;</div>
                 <div class="dhx_cal_today_button"></div>
+                <!-- <div class="dhx_dummy dhx_cal_today_button" style='right:220px' onclick='showLightbox()'>Add event</div> -->
                 <div class="dhx_cal_date"></div>
                 <div class="dhx_cal_tab" name="day_tab"></div>
                 <div class="dhx_cal_tab" name="week_tab"></div>

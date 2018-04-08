@@ -1,6 +1,7 @@
 
 class UserModel{
     constructor(user_entry) {
+        this._id = user_entry._id,
         this.firstName = user_entry.firstName
         this.lastName = user_entry.lastName
         this.email = user_entry.email
@@ -12,11 +13,11 @@ class UserModel{
         this.verifyCode = user_entry.verifyCode
         this.verified = user_entry.verified
         this.facultyVerified = user_entry.facultyVerified
-        
     }
 
     serialize(){
         return {
+            _id: this._id,
             firstName: this.firstName,
             lastName: this.lastName,
             email: this.email,
@@ -33,6 +34,7 @@ class UserModel{
 
     static deserialize(sUser) {
         return new UserModel({
+            _id: sUser._id,
             firstName: sUser.firstName,
             lastName: sUser.lastName,
             email: sUser.email,

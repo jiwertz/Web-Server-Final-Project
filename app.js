@@ -3,14 +3,19 @@ const express = require ('express')
 const session = require('express-session')
 const ejs = require('ejs')
 var bodyParser = require("body-parser");
-const multer = require('multer')
 const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
+const csrf = require('csurf')
+const passport = require('passport')
+const flash = require('connect-flash')
+const cookieParser = require('cookie-parser')
 
 const app = express()
 app.set('view engine','ejs')
 app.set('views','./ejs_views')
+app.use(cookieParser());
+app.use(express.urlencoded({extended: false}))
 
 //Import class used to update the server's email authentication
 const UpdateServerEmail = require('./models/UpdateServerEmail')
@@ -26,22 +31,16 @@ const Mailer = require('./models/Mailer')
 //Mailer.sendMail(arrayOfEmails, subject title, body of email)
 //Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering')
 
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const GenerateCode = require('./models/GenerateCode')
-//Usage: GenerateCode.getId()
-//Will return a 6 dgit alpha-numeric code
+const multerUtility = require('./public/Utilities/MulterUtility')
+const VerifyCode = require('./config/VerifyCode')
 
 const UserSchema = require('./models/UserSchema')
 const UserModel = require('./models/UserModel')
-
-const saltCount = 10
-
-app.use(express.urlencoded({extended: false}))
 
 app.use(session({
     secret: 'UCOCSADVISEMENT',
@@ -52,301 +51,188 @@ app.use(session({
     }
 }))
 
-app.get("/",(req, res)=>{
-    if (!req.session.userInfo){
-        req.session.userInfo = null
-    }
-    let user = req.session.userInfo
-    let data = getCalendarEvents()
-    res.render('index',{user, data})
+app.use(flash());
+app.use(passport.initialize())
+app.use(passport.session())
+
+require('./config/passport');
+
+app.post("/SignUpAdvisement", (req,res)=>{
+    res.redirect("/")
 })
 
-app.get("/SignIn",(req,res)=>{
+app.post("/editProfile", (req, res)=>{
+    if (!req.session.userInfo){
+        console.log("redirecting")
+        req.redirect("/")
+    }
+    multerUtility.uploadPicture(req, res, (err) =>{
+        if (err){
+            return res.status(500).send('<h1>Unable to upload file to server</h1>')
+        }
+        const query = {_id: req.body._id}
+        let update = {
+            $set: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                facultyID: req.body.facultyID,
+                studentID: req.body.studentID,
+                majorCode: req.body.majorCode,
+            }
+        }
+        if (req.file){
+            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+        }
+        if (req.body.password != ''){
+            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+        }
+        UserSchema.findOneAndUpdate(query,update,(err, result)=>{
+            if (err){
+                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
+                return res.status(500).send('<h1>Internal DB Error</h1>')
+            }
+            if (req.file){
+                if (req.body.image_path != ''){
+                    fs.unlink(req.body.image_path)
+                }
+            }
+            let user = new UserModel(result)
+            console.log("user", user)
+            req.session.userInfo = user.serialize()
+            res.redirect("/")
+        })
+    })
+})
+
+//Any app.get() or app.post() above this point doesn't fall victim to the csurf middleware
+app.use(csrf())
+//Any app.get or app.post beyond this point falls victim to the csurf middleware
+
+app.get("/", (req, res)=>{
+    let user = null
+    if (req.session.userInfo){
+        user =  UserModel.deserialize(req.session.userInfo)
+    }
+    let data = getCalendarEvents()
+    let verifyMessage = req.flash('verifySuccess')
+    let loginMessage = req.flash('signinsuccess')
+    res.render('index',{user, data, verifyMessage, loginMessage})
+})
+
+app.get("/SignIn", (req,res)=>{
     if (!req.session.userInfo){
         let signIn = {
             error: null,
             email: null
         }
-        res.render('SignIn', {signIn})
+        let messages = req.flash('loginerror')
+        res.render('SignIn', {signIn, messages, csrfToken: req.csrfToken()})
     }
     else{
         res.redirect("/")
     }
 })
 
-app.post("/SignIn",(req,res)=>{
-    const query = {email: req.body.email}
-    UserSchema.findOne(query,(err, results)=>{
-        if (err){
-            return res.status(500).send('<h1>User sign in error! Could not read database! Please contact the site administrator</h1>',err);
-        
-        }
-        if (results == null){
-            let signIn = {
-                error: true,
-                email: null
-            }
-            return res.render("SignIn",{signIn})   
-        } else if (!bcrypt.compareSync(req.body.password,results.password)){
-            let signIn = {
-                error: true,
-                email: req.body.email
-            }
-            return res.render("SignIn",{signIn})
-        } else{
-            let user = new UserModel({
-                firstName: results.firstName,
-                lastName: results.lastName,
-                email: results.email,
-                isFaculty: results.isFaculty,
-                facultyID: results.facultyID,
-                studentID: results.studentID,
-                majorCode: results.majorCode,
-                profilePic: results.profilePic,
-                verifyCode: results.verifyCode,
-                verified: results.verified,
-                facultyVerified: results.facultyVerified
-            })
-            req.session.userInfo = user.serialize()
-            res.redirect("/")
-        }
-    })
-})
+app.post("/SignIn", passport.authenticate('locallogin',{
+    successRedirect: '/',
+    failureRedirect: '/SignIn',
+    failureFlash: true
+}))
 
-app.get("/SignUp",(req,res)=>{
+app.get("/SignUp", (req,res)=>{
     let user = null;
     if (!req.session.userInfo){
         user = {
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            accountType: req.body.accountType,
-            facultyID: req.body.facultyID,
-            studentID: req.body.studentID,
-            majorCode: req.body.majorCode,
+            firstName: null,
+            lastName: null,
+            email: null,
+            accountType: null,
+            facultyID: null,
+            studentID: null,
+            majorCode: null
         }
     } else{
-        user = req.session.userInfo
+        user =  UserModel.deserialize(req.session.userInfo)
     }
-    let err = {error: false}
-    res.render('SignUp',{user, err})
+    const messages = req.flash('signuperror');
+    res.render('SignUp',{req, messages, csrfToken, user, csrfToken: req.csrfToken()})
 })
 
-app.post("/SignUp",(req,res)=>{
-    let query = {email: req.body.email}
-    UserSchema.findOne(query,(err,result)=>{
-        if (err){
-            return res.status(500).send('<h1>User registration error! Could not read database! Please contact the site administrator</h1>',err);
-        }
-        if (result != null){
-            let user = {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                accountType: req.body.accountType,
-                facultyID: req.body.facultyID,
-                studentID: req.body.studentID,
-                majorCode: req.body.majorCode,
-            }
-            let err = {error: true}
-            return res.render("SignUp",{user, err})
-        }
-        let randomCode = GenerateCode.getId()
-        const newUser = new UserSchema({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            password: bcrypt.hashSync(req.body.password, saltCount),
-            //double check how the isFaculty feature is working!! IWERTZ
-            isFaculty: (req.body.accountType == "0") ? false : true,
-            facultyID: req.body.facultyID,
-            studentID: req.body.studentID,
-            majorCode: req.body.majorCode,
-            profilePic: null,
-            verifyCode: randomCode,
-            verified: false,
-            facultyVerified: false
-        })
-        newUser.save((err, results)=>{
-            if (err){
-                return res.status(500).send('<h1>User registration error! Please contact the site administrator</h1>',err);
-            }
-            let msg = `
-            <html>
-                <body style="background-color:#0b2d63; margin:8px; padding:8px">
-                    <font size="6" color="#e5b509">
-                        Thank you ${req.body.firstName} ${req.body.lastName} for registering an account with the UCO CS Advisment Scheduling System!
-                        <br><br>
-                        Please use the code below to complete your registration: <br>
-                    </font>
-                    <font size="20" color="#e5b509">
-                        &nbsp;&nbsp;&nbsp;&nbsp;<b>${randomCode}</b>
-                    </font>
-                    <font size="6" color="#e5b509">
-                        <br><br>
-                        Thank you, <br>
-                        CS UCO Advisment Scheduling System 
-                        <br><br><br>
-                        *Note: This email was auto generated, please do not respond directly to this email. If you have any questions regarding the system,
-                        please contact the site administrator.
-                    </font>
-                </body>
-            </html>
-            `
-            Mailer.sendMail(req.body.email,"UCO CS Advisement Registration", msg)
-            let user = new UserModel({
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                isFaculty: (req.body.accountType == "0") ? false : true,
-                facultyID: req.body.facultyID,
-                studentID: req.body.studentID,
-                majorCode: req.body.majorCode,
-                profilePic: null,
-                verifyCode: randomCode,
-                verified: false,
-                facultyVerified: false
-            })
-            req.session.userInfo = user.serialize();    
+app.post("/SignUp", passport.authenticate('localsignup',{
+    successRedirect: '/verifyCode',
+    failureRedirect: '/SignUp',
+    failureFlash: true
+}))
 
-            res.render("VerifyCode", {user, err: false})
-        })
+app.get("/verifyCode", isLoggedIn, (req,res)=>{
+    let user = UserModel.deserialize(req.session.userInfo)
+    let messages = req.flash('verifyError')
+    res.render("VerifyCode", {user, messages, csrfToken: req.csrfToken()})
+})
+
+app.post("/verifyCode",(req, res)=>{
+    let user = UserModel.deserialize(req.session.userInfo)
+    VerifyCode.verify(req, (err,a)=>{
+        if (err){
+           return res.redirect("/verifyCode")
+        }
+        else{
+            return res.redirect("/")
+        }
     })
 })
 
-app.get("/verifyCode", (req,res)=>{
-    if (!req.session.userInfo){
-        return res.redirect("/")
-    }
-    let user = UserModel.deserialize(req.session.userInfo)
-    res.render("VerifyCode", {user, err: false})
-})
-
-app.post("/verifyCode",(req,res)=>{
-    if (!req.session.userInfo){
-        return res.redirect("/")
-    }
-    let user = UserModel.deserialize(req.session.userInfo)
-    if (user.verifyCode == req.body.code){
-        let query = {email: user.email}
-        let update = {
-            $set: {
-                verified: true
-            }
-        }
-        UserSchema.findOneAndUpdate(query,update,(err,result)=>{
-            if (err){
-                return res.status(500).send('<h1>User verification error! Please contact the site administrator</h1>',err);
-            }
-            user.verified = true
-            req.session.userInfo = user.serialize()
-            return res.redirect("/")
-        })
-    } else{
-        res.render("VerifyCode",{user, err: true})
-    }
-})
-
-app.get("/logout",(req, res)=>{
-    if (!req.session.userInfo){
-        return req.redirect("/")
-    }
+app.get("/logout", (req, res)=>{
     req.session.destroy()
     res.redirect("/")
 })
 
-app.get("/calendar",(req, res)=>{
-    if (!req.session.userInfo){
-        req.session.userInfo = null
+app.get("/calendar", (req, res)=>{
+    let user = null
+    if (req.session.userInfo){
+        user =  UserModel.deserialize(req.session.userInfo)   
     }
-    let user = req.session.userInfo
     let data = getCalendarEvents()
     res.render('calendar', {user, data})
 })
 
-app.post("/SignUpAdvisement", (req,res)=>{
-    res.redirect("/")
+app.get("/editProfile", isLoggedIn, (req, res)=>{
+    let user = UserModel.deserialize(req.session.userInfo);
+    res.render('ProfileEdit', {user, csrfToken: req.csrfToken()})
 })
-
 
 const port = process.env.PORT || 3000
 app.listen(port, () =>{
     console.log('Server is running at port', port)
 })
 
-function getCalendarEvents(){
-    return [
-    {
-        id: "1234",
-        text: "appointment",
-        start_date: "04/02/2018 12:00",
-        end_date: "04/02/2018 12:10"
-    },
-    {
-        id: "1235",
-        text: "appointment",
-        start_date: "04/02/2018 12:10",
-        end_date: "04/02/2018 12:20"
-    },
-    {
-        id: "1236",
-        text: "appointment",
-        start_date: "04/02/2018 12:20",
-        end_date: "04/02/2018 12:30"
-    },
-    {
-        id: "1237",
-        text: "appointment",
-        start_date: "04/02/2018 12:30",
-        end_date: "04/02/2018 12:40"
-    },
-    {
-        id: "1238",
-        text: "appointment",
-        start_date: "04/02/2018 12:40",
-        end_date: "04/02/2018 12:50"
-    },
-    {
-        id: "1239",
-        text: "appointment",
-        start_date: "04/02/2018 12:50",
-        end_date: "04/02/2018 13:00"
-    },
-    {
-        id: "1240",
-        text: "appointment",
-        start_date: "04/02/2018 13:00",
-        end_date: "04/02/2018 13:10"
-    },
-    {
-        id: "1241",
-        text: "appointment",
-        start_date: "04/02/2018 13:10",
-        end_date: "04/02/2018 13:20"
-    },
-    {
-        id: "1242",
-        text: "appointment",
-        start_date: "04/02/2018 13:20",
-        end_date: "04/02/2018 13:30"
-    },
-    {
-        id: "1243",
-        text: "appointment",
-        start_date: "04/02/2018 13:30",
-        end_date: "04/02/2018 13:40"
-    },
-    {
-        id: "1244",
-        text: "appointment",
-        start_date: "04/02/2018 13:40",
-        end_date: "04/02/2018 13:50"
-    },
-    {
-        id: "1245",
-        text: "appointment",
-        start_date: "04/02/2018 13:50",
-        end_date: "04/02/2018 14:00"
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        res.render('errorpage', {message: 'Login required to access this page.'});
     }
-]
 }
+
+function getCalendarEvents(){
+   return [
+       {
+           text: "appointment",
+           description: "desc1",
+           start_date: "04/07/2018 09:00",
+           end_date: "04/07/2018 09:10"
+       }
+    ]
+}
+
+// // Create router[s] which will bypass the csrf token validation. This must come before app.use(csrf())
+// let api = createApiRouter()
+// app.use("/SignUpAdvisement", api)
+// function createApiRouter() {
+//     let router = new express.Router()
+//     router.post("/SignUpAdvisement", (req,res)=>{
+//         res.redirect("/")
+//     })
+//     return router
+// }

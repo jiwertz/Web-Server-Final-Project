@@ -7,8 +7,7 @@
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
         <link rel="stylesheet" href="../Styles/DefaultStyle.css"  type="text/css">
-
-        <title>UCO CS Advisement</title>
+        <title>Unauthorized Access</title>
     </head>
     <body>
         <nav class="nav">
@@ -16,41 +15,28 @@
                 <li class ="nav-item">
                 <a class="nav-link" href="/">Home Page</a>
                 </li>
-                <li class ="nav-item active">
-                <a class="nav-link" href="/verifyCode">Verify Account</a>
+                <li class ="nav-item">
+                <a class="nav-link" href="/SignIn">Sign In</a>
                 </li>
                 <li class ="nav-item">
-                        <a class="nav-link" href="/editProfile">Edit Profile</a>
-                    </li>
+                <a class="nav-link" href="/SignUp">Sign Up</a>
+                </li>
                 <li class ="nav-item">
                     <a class="nav-link" href="/calendar">View Calendar</a>
                 </li>
             </ul>
         </nav>
-
-        <!-- If logged in user, display the user menu in the right hand corner -->
-        <% if (user) { %>
-            <% include ./partials/profileMenu %>
-        <% } %>
-
-        <div style="color:white">
-            <h1><b>&nbsp;Enter Verification Code:</b></h1>
+        <br>
+        <div class="jumbotron">
+            <div class="container">
+                <h1 class="display-3">Unauthorized Access</h1>
+                <p>
+                    <%= message %>
+                </p>
+            </div>
         </div>
-        <% if(messages && messages.length > 0) { %>
-            <div class="alert alert-danger" role="alert">Verification Error: <%= messages %></div>
-            <br>
-        <% } %>
-        <form method="POST" action="/verifyCode>
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            &nbsp;&nbsp;&nbsp;&nbsp;
-            <input type="text" id="code" name ="code" maxlength="6" size="8">
-            <input class="btn btn-success" type='submit' value='Validate'>
-        </form>
-
-         <!-- Optional JavaScript -->
-        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    </body> 
+    </body>
 </html>
