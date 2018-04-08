@@ -7,6 +7,7 @@ const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
 const csrf = require('csurf')
+
 const passport = require('passport')
 const flash = require('connect-flash')
 const cookieParser = require('cookie-parser')
@@ -41,6 +42,8 @@ const VerifyCode = require('./config/VerifyCode')
 
 const UserSchema = require('./models/UserSchema')
 const UserModel = require('./models/UserModel')
+const AppointmentSchema = require('./models/AppointmentSchema')
+const AppointmentModel = require('./models/AppointmentModel')
 
 app.use(session({
     secret: 'UCOCSADVISEMENT',
@@ -114,10 +117,12 @@ app.get("/", (req, res)=>{
     if (req.session.userInfo){
         user =  UserModel.deserialize(req.session.userInfo)
     }
-    let data = getCalendarEvents()
-    let verifyMessage = req.flash('verifySuccess')
-    let loginMessage = req.flash('signinsuccess')
-    res.render('index',{user, data, verifyMessage, loginMessage})
+    let data= []
+    getCalendarEvents((err, data)=>{
+        let verifyMessage = req.flash('verifySuccess')
+        let loginMessage = req.flash('signinsuccess')
+        res.render('index',{user, data, verifyMessage, loginMessage})
+    })
 })
 
 app.get("/SignIn", (req,res)=>{
@@ -127,7 +132,8 @@ app.get("/SignIn", (req,res)=>{
             email: null
         }
         let messages = req.flash('loginerror')
-        res.render('SignIn', {signIn, messages, csrfToken: req.csrfToken()})
+        //res.render('SignIn', {signIn, messages, csrfToken: req.csrfToken()})
+        res.render('SignIn', {signIn, messages})
     }
     else{
         res.redirect("/")
@@ -156,7 +162,8 @@ app.get("/SignUp", (req,res)=>{
         user =  UserModel.deserialize(req.session.userInfo)
     }
     const messages = req.flash('signuperror');
-    res.render('SignUp',{req, messages, csrfToken, user, csrfToken: req.csrfToken()})
+    //res.render('SignUp',{req, messages, csrfToken, user, csrfToken: req.csrfToken()})
+    res.render('SignUp',{req, messages, csrfToken, user})
 })
 
 app.post("/SignUp", passport.authenticate('localsignup',{
@@ -168,7 +175,8 @@ app.post("/SignUp", passport.authenticate('localsignup',{
 app.get("/verifyCode", isLoggedIn, (req,res)=>{
     let user = UserModel.deserialize(req.session.userInfo)
     let messages = req.flash('verifyError')
-    res.render("VerifyCode", {user, messages, csrfToken: req.csrfToken()})
+    //res.render("VerifyCode", {user, messages, csrfToken: req.csrfToken()})
+    res.render("VerifyCode", {user, messages})
 })
 
 app.post("/verifyCode",(req, res)=>{
@@ -193,13 +201,17 @@ app.get("/calendar", (req, res)=>{
     if (req.session.userInfo){
         user =  UserModel.deserialize(req.session.userInfo)   
     }
-    let data = getCalendarEvents()
-    res.render('calendar', {user, data})
+    getCalendarEvents((err, data) =>
+    {
+        res.render('calendar', {user, data})
+    })
+
 })
 
 app.get("/editProfile", isLoggedIn, (req, res)=>{
     let user = UserModel.deserialize(req.session.userInfo);
-    res.render('ProfileEdit', {user, csrfToken: req.csrfToken()})
+    //res.render('ProfileEdit', {user, csrfToken: req.csrfToken()})
+    res.render('ProfileEdit', {user})
 })
 
 const port = process.env.PORT || 3000
@@ -214,25 +226,142 @@ function isLoggedIn(req, res, next) {
         res.render('errorpage', {message: 'Login required to access this page.'});
     }
 }
+app.get("/addAppointments", isLoggedIn, (req, res)=>
+{
+    let user = req.session.userInfo
+    if (user.isFaculty){
+        res.render('addAppointments', {user})
+    }
+    else{
+        res.redirect("/")
+    }
+})
+app.post("/addAppointments", (req, res)=>
+{
+    let MINUTES = 0;
+    let HOURS = parseInt(req.body.end_date.substring(0, 2)) - parseInt(req.body.start_date.substring(0, 2))
+    let begMINUTES = parseInt(req.body.start_date.substring(3, 5))
+    let endMINUTES = parseInt(req.body.end_date.substring(3, 5))
+    let begHOURS = parseInt(req.body.start_date.substring(0, 2))
+    let endHOURS = parseInt(req.body.end_date.substring(0, 2))
 
-function getCalendarEvents(){
-   return [
-       {
-           text: "appointment",
-           description: "desc1",
-           start_date: "04/07/2018 09:00",
-           end_date: "04/07/2018 09:10"
-       }
-    ]
+    if(parseInt(req.body.end_date.substring(3, 5)) >= parseInt(req.body.start_date.substring(3, 5)))
+    {
+        MINUTES = parseInt(req.body.end_date.substring(3, 5)) - parseInt(req.body.start_date.substring(3, 5)) 
+    }
+    else if(parseInt(req.body.end_date.substring(3, 5)) < parseInt(req.body.start_date.substring(3, 5)))
+    {
+        MINUTES = parseInt(60 - req.body.start_date.substring(3, 5)) + parseInt(req.body.end_date.substring(3, 5))
+        HOURS = HOURS - 1
+    }
+    if(MINUTES % 10 != 0)
+    {
+        MINUTES = ((parseInt(60 - req.body.start_date.substring(3, 5)) + parseInt(req.body.end_date.substring(3, 5)))- MINUTES%10) + 10
+    }
+
+    MINUTES = MINUTES + HOURS * 60;
+    let num_of_appointments = MINUTES / 10;
+    let x;
+    let data = []
+
+    for(x = 0; x < num_of_appointments; x++)
+    {
+        if(begMINUTES >= 60)
+        {
+            begMINUTES = begMINUTES - 60
+            begHOURS = begHOURS + 1
+        }
+        let final_beginning_date = req.body.date + " " + (begHOURS + ":" + parseInt(begMINUTES))
+        endMINUTES = begMINUTES + 10
+        endHOURS = begHOURS
+        if(endMINUTES >= 60)
+        {
+            endMINUTES = endMINUTES - 60
+            endHOURS = endHOURS + 1
+        }
+
+        let final_ending_date = req.body.date + " " + (endHOURS + ":" + parseInt(endMINUTES))
+
+        let obj = {
+            text: "appointment " + (x + 1),
+            start_date: new Date(final_beginning_date),
+            end_date: new Date(final_ending_date)
+        };
+       data.push(obj)
+       begMINUTES = begMINUTES + 10
+       endMINUTES = endMINUTES = 10
+    }
+    console.log(data)
+    AppointmentSchema.insertMany(data)
+    
+    res.redirect("/")
+
+})
+
+app.post("/remove", (req, res)=>
+{
+     let query = {_id: req.body.id}
+     AppointmentSchema.remove(query, (err, results)=>
+    {
+        if(err)
+        {
+            console.log('<h1>Error attempting to remove from database</h1>')
+            return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+        }
+     else {
+        res.redirect('/');
+    }
+    })
+
+})
+app.post("/add", (req, res)=>
+{
+    let query = {_id: req.body.id}
+    let update= {
+        $set: {
+            start_date: new Date(req.body.start_date),
+            end_date: new Date(req.body.end_date),
+            text: req.body.text,
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query, update,(err, result)=>{
+        if (err){
+            let event = new AppointmentSchema({
+                start_date: new Date(req.body.start_date),
+                end_date: new Date(req.body.end_date),
+                text: req.body.text,
+                studentID: '',
+                booked: false
+            })
+            event.save((err, result)=>{
+                if (err){
+                    console.log(err)
+                    return res.status(500).send('<h1> Internal Database Error</h1>')
+                }
+                return res.redirect("/")
+            })
+        }
+        else{
+            return res.redirect("/")
+        }
+        
+    })
+    
+})
+
+function getCalendarEvents(callback)
+{
+    AppointmentSchema.find({}, (err, res)=> 
+    {
+        if(err)
+        {
+            return res.status(500).send('<h1> Internal Database Error</h1>')
+        }
+        let event=[];
+        for(let appointment of res)
+        {
+            event.push(new AppointmentModel(appointment));
+        }
+        return callback(false, event);
+    })    
 }
-
-// // Create router[s] which will bypass the csrf token validation. This must come before app.use(csrf())
-// let api = createApiRouter()
-// app.use("/SignUpAdvisement", api)
-// function createApiRouter() {
-//     let router = new express.Router()
-//     router.post("/SignUpAdvisement", (req,res)=>{
-//         res.redirect("/")
-//     })
-//     return router
-// }
