@@ -99,9 +99,9 @@ app.post("/editProfile", (req, res) => {
                 if (req.body.image_path != '') {
                     fs.unlink(req.body.image_path)
                 }
-            }
+            }s
+            result.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
             let user = new UserModel(result)
-            console.log("user", user)
             req.session.userInfo = user.serialize()
             res.redirect("/")
         })
@@ -113,7 +113,8 @@ app.post("/remove", (req, res) => {
     AppointmentSchema.remove(query, (err, results) => {
         if (err) {
             console.log('<h1>Error attempting to remove from database</h1>')
-            return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+            //return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+            res.redirect('/');
         }
         else {
             res.redirect('/');
