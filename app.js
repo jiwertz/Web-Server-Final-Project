@@ -425,7 +425,6 @@ function getCalendarEvents(callback) {
                 }
             }
         }
-        console.log('array', event)
         return callback(false, event);
     })
 }
