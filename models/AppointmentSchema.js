@@ -6,7 +6,7 @@ const appointmentSchema = new Schema({
     text: String,
     start_date: String,
     end_date: String,
-    studentID: String,
+    studentID: {type:Schema.Types.ObjectId, ref:'UserSchema'},
     booked: Boolean
 });
 
