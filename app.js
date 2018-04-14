@@ -7,6 +7,8 @@ const path = require('path')
 const fs = require('fs')
 const bcrypt = require('bcrypt')
 const csrf = require('csurf')
+const moment = require('moment') // This is used when rendering the index.ejs file to format the dates displayed from the pendingAppointments.ejs file
+moment.suppressDeprecationWarnings = true;
 
 const passport = require('passport')
 const flash = require('connect-flash')
@@ -29,8 +31,8 @@ require('./models/Database')
 //Import class that will be used to send emails
 const Mailer = require('./models/Mailer')
 //Example of user the Mailer class to send an email
-//Mailer.sendMail(arrayOfEmails, subject title, body of email)
-//Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering')
+//Mailer.sendMail(arrayOfEmails, subject title, body of email, boolean to include Enroll.docx as attachment)
+//Mailer.sendMail(['jiwertz9@gmail.com','jiwertz@uco.edu'],'Registration','Thank you for registering', false)
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'node_modules')));
@@ -60,13 +62,63 @@ app.use(passport.session())
 
 require('./config/passport');
 
-app.post("/SignUpAdvisement", (req, res) => {
-    res.redirect("/")
+app.post("/SignUpAdvisement", isLoggedIn, (req, res) => 
+{
+    let user = UserModel.deserialize(req.session.userInfo)
+    let query = {_id: req.body.id}
+    let update = {
+        $set: {
+            studentID: user._id,
+            booked: true
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
+        if (err){
+            return res.status(500).send('<h1>Internal DB Error</h1>')
+        }
+        Mailer.sendMail(
+            user.email,
+            "Appointment Registration",
+            `
+            <html>
+            <body style="background-color:#0b2d63; margin:8px; padding:8px">
+                <font size="6" color="#e5b509">
+                    You have registred for a CS Advisement Appointment on
+                    ${moment(result.start_date).format('MMM Do YYYY')} 
+                    from ${moment(result.start_date).format('hh:mm A')} to ${moment(result.end_date).format('hh:mm A')}.
+                    <br><br>
+                    Please fill out the attached document
+                    and bring it with you to the appointment or email it to the advisor before the appointment.
+                </font
+            </body>
+            </html>
+            `,
+            true
+        )
+        req.flash('registerSuccess', 'Successfully Registered For An Appointment On ' + result.start_date + '!')
+        res.redirect("/")
+    })
+})
+
+app.post('/unregisterAppointment',(req,res)=>{
+    let query = {_id: req.body.id}
+    let update = {
+        $set: {
+            studentID: null,
+            booked: false
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
+        if (err){
+            return res.status(500).send('<h1>Internal DB Error</h1>')
+        }
+        req.flash('registerSuccess', 'Successfully Unregistred For An Appointment On ' + result.start_date + '!')
+        res.redirect("/")
+    })
 })
 
 app.post("/editProfile", (req, res) => {
     if (!req.session.userInfo) {
-        console.log("redirecting")
         req.redirect("/")
     }
     multerUtility.uploadPicture(req, res, (err) => {
@@ -99,9 +151,9 @@ app.post("/editProfile", (req, res) => {
                 if (req.body.image_path != '') {
                     fs.unlink(req.body.image_path)
                 }
-            }s
-            result.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+            }
             let user = new UserModel(result)
+            user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
             req.session.userInfo = user.serialize()
             res.redirect("/")
         })
@@ -110,18 +162,27 @@ app.post("/editProfile", (req, res) => {
 
 app.post("/remove", (req, res) => {
     let query = { _id: req.body.id }
-    AppointmentSchema.remove(query, (err, results) => {
-        if (err) {
-            console.log('<h1>Error attempting to remove from database</h1>')
-            //return res.status(500).send('<h1>Error attempting to remove from database</h1>')
-            res.redirect('/');
+    AppointmentSchema.findOne(query).populate("studentID").exec((er, resl)=>{
+        if (er){
+            return res.status(500).send('<h1>Error attempting to remove from database</h1>')
         }
-        else {
-            res.redirect('/');
-        }
+        Mailer.sendMail(
+            resl.studentID.email,
+            "CS Advisement Appointment Cancelled",
+            "<h1>Your CS Advisement appointment for " + resl.start_date + " to " + resl.end_date + " was cancelled. Please sign up for a new appointment. </h1>",
+            false
+        )
+        AppointmentSchema.remove(query, (err, results) => {
+            if (err) {
+                return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+            }
+            else {
+                res.redirect('/');
+            }
+        })
     })
-
 })
+
 app.post("/add", (req, res) => {
     let query = { _id: req.body.id }
     let update = {
@@ -142,7 +203,6 @@ app.post("/add", (req, res) => {
             })
             event.save((err, result) => {
                 if (err) {
-                    console.log(err)
                     return res.status(500).send('<h1> Internal Database Error</h1>')
                 }
                 return res.redirect("/")
@@ -168,7 +228,8 @@ app.get("/", (req, res) => {
     getCalendarEvents((err, data) => {
         let verifyMessage = req.flash('verifySuccess')
         let loginMessage = req.flash('signinsuccess')
-        res.render('index', { user, data, verifyMessage, loginMessage })
+        let registerMessage = req.flash('registerSuccess')
+        res.render('index', { user, data, verifyMessage, loginMessage, registerMessage, moment, csrfToken: req.csrfToken()})
     })
 })
 
@@ -322,27 +383,47 @@ app.post("/addAppointments", (req, res) => {
         let obj = {
             text: "appointment " + (x + 1),
             start_date: new Date(final_beginning_date),
-            end_date: new Date(final_ending_date)
+            end_date: new Date(final_ending_date),
+            studentID: null,
+            booked: false
         };
         data.push(obj)
         begMINUTES = begMINUTES + 10
         endMINUTES = endMINUTES = 10
     }
-    console.log(data)
     AppointmentSchema.insertMany(data)
-
     res.redirect("/")
-
 })
 
+Array.prototype.insert = function ( index, item ) {
+    this.splice( index, 0, item );
+};
+
 function getCalendarEvents(callback) {
-    AppointmentSchema.find({}, (err, res) => {
+    AppointmentSchema.find().populate('studentID').exec((err, res) => {
         if (err) {
             return res.status(500).send('<h1> Internal Database Error</h1>')
         }
-        let event = [];
-        for (let appointment of res) {
-            event.push(new AppointmentModel(appointment));
+        //Insert the appointments into the event array, but place them in sorted order!
+        let event = []
+        for (let appointment of res){
+            apt = new AppointmentModel(appointment)
+            inserted = false;
+            if (event.length == 0){
+                event.push(apt)
+            } else{
+                InnerLoop:
+                for (let index in event){
+                    if (moment(moment(apt.start_date).format('MM/DD/YYYY HH:MM')).isBefore(moment(event[index].start_date).format('MM/DD/YYYY HH:MM'))){
+                        event.insert(index, apt)
+                        inserted = true
+                        break InnerLoop
+                    }
+                }
+                if (inserted == false){
+                    event.push(apt)
+                }
+            }
         }
         return callback(false, event);
     })

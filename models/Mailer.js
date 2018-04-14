@@ -3,7 +3,7 @@ const ServerEmailSchema = require('./ServerEmailSchema');
 const nodemailer = require('nodemailer');
 
 class Mailer{
-    static sendMail(receiver, subject, msg){
+    static sendMail(receiver, subject, msg, includeAttachment){
         //Get the server's email address information from the database
         ServerEmailSchema.findOne({}, (err, results)=>{
             //If error, then could not get the server's email username and password
@@ -42,12 +42,23 @@ class Mailer{
                 subject: subject,
                 html: msg
             }
-            console.log(mailOptions)
+            //Check to see if the Enroll document needs to be attached to the email.
+            if (includeAttachment == true){
+                mailOptions.attachments =[{
+                    filename: 'Enroll.docx',
+                    path: './public/Enroll.docx'
+                }]
+            }
+
             //Have the transporter send the email to the client's email
             transporter.sendMail(mailOptions, (err, res)=>{
                 if (!err){
-                    console.log(res);
+                    console.log('Email Sent');
+                } else{
+                    console.log('Email Error')
+                    console.log(err)
                 }
+
             })
         })
     }
