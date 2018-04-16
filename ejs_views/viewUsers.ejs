@@ -10,38 +10,76 @@
         <title>Users</title>
     </head>
     <body>
-            <h1>View User Page</h1>
-                <table class="table table-hover table-dark">
-                    <thead>
-                        <tr>
-                        <th scope="col">Last Name</th>
-                        <th scope="col">Fist Name</th>
-                        <th scope="col">StudentID</th>
-                        <th scope="col">Faculty</th>
-                        <th scope="col">Update</th>
-                        <th scope="col">Remove</th>
-                        </tr>
-                    </thead>
-                <tbody>
-                        <% for (const users of results) { %>
-                            <tr>
-                                <td><%= users.lastName%></td>
-                                <td><%= users.firstName%></td>
-                                <td><%= users.studentID%></td>
-                                <td><%= users.isFaculty%></td>
-                                <td>
-                                            <form action="/admin_ProfileEdit" method="get">
-                                                <input type="hidden" name="userInfo" value='<%= JSON.stringify(users) %>' >
-                                                <button type="submit" class="btn btn-primary">Update</button>
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <form action="/removeUser" method="get">
-                                                <input type="hidden" name="_id" value="<%= users._id %>">
-                                                <button type="submit" class="btn btn-danger">Remove</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% } %>
+        <nav class="nav">
+            <ul class="nav nav-tabs">
+                <li class ="nav-item">
+                <a class="nav-link" href="/">Home Page</a>
+                </li>
+                <% if (user.verified == '0') { %>
+                    <li class ="nav-item">
+                    <a class="nav-link" href="/verifyCode">Verify Account</a>
+                    </li>
+                <% } else { %>
+                    <li class ="nav-item">
+                        <a class="nav-link" href="/editProfile">Edit Profile</a>
+                    </li>
+                <% } %>
+                <li class ="nav-item">
+                    <a class="nav-link" href="/calendar">View Calendar</a>
+                </li>
+                <% if (user && user.isFaculty && user.facultyVerified) { %>
 
+                    <li class ="nav-item">
+                        <a class="nav-link" href="/addAppointments">Add Appointments</a>
+                    </li>
+                    <li class ="nav-item active">
+                        <a class="nav-link" href="/viewUsers">View Users</a>
+                    </li>
+                <% } %>
+            </ul>
+        </nav>
+        <div style="color:white">
+            <h1>View User Page</h1>
+        </div>
+
+        <!-- If logged in user, display the user menu in the right hand corner -->
+        <% if (user) { %>
+            <% include ./partials/profileMenu %>
+        <% } %>
+
+        <table class="table table-hover table-dark">
+            <thead>
+                <tr>
+                <th scope="col">Last Name</th>
+                <th scope="col">Fist Name</th>
+                <th scope="col">StudentID</th>
+                <th scope="col">Faculty</th>
+                <th scope="col">Update</th>
+                <th scope="col">Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (const users of results) { %>
+                    <tr>
+                        <td><%= users.lastName%></td>
+                        <td><%= users.firstName%></td>
+                        <td><%= users.studentID%></td>
+                        <td><%= users.isFaculty%></td>
+                        <td>
+                        <form action="/admin_ProfileEdit" method="get">
+                            <input type="hidden" name="userInfo" value='<%= JSON.stringify(users) %>' >
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </form>
+                        </td>
+                        <td>
+                            <form action="/removeUser" method="get">
+                                <input type="hidden" name="_id" value="<%= users._id %>">
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </body>
 </html>

@@ -153,9 +153,51 @@ app.post("/editProfile", (req, res) => {
                 }
             }
             let user = new UserModel(result)
-            user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+            if (req.file){
+                user.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+            }
             req.session.userInfo = user.serialize()
             res.redirect("/")
+        })
+    })
+})
+
+app.post("/adminEditProfile", (req, res) => {
+    if (!req.session.userInfo) {
+        req.redirect("/")
+    }
+    multerUtility.uploadPicture(req, res, (err) => {
+        if (err) {
+            return res.status(500).send('<h1>Unable to upload file to server</h1>')
+        }
+        const query = { _id: req.body._id }
+        let update = {
+            $set: {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                facultyID: req.body.facultyID,
+                studentID: req.body.studentID,
+                majorCode: req.body.majorCode,
+            }
+        }
+        if (req.file) {
+            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
+        }
+        if (req.body.password != '') {
+            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+        }
+        UserSchema.findOneAndUpdate(query, update, (err, result) => {
+            if (err) {
+                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
+                return res.status(500).send('<h1>Internal DB Error</h1>')
+            }
+            if (req.file) {
+                if (req.body.image_path != '') {
+                    fs.unlink(req.body.image_path)
+                }
+            }
+            res.redirect("/viewUsers")
         })
     })
 })
@@ -434,7 +476,7 @@ app.get('/removeUser', (req, res) => {
 		if (err) {
 			return res.status(500).send('<h1>Remove error</h1>');
 		}
-		return res.redirect('/');
+		return res.redirect('/viewUsers');
 	});
 });
 app.post("/add", (req, res)=>
