@@ -413,8 +413,9 @@ function getCalendarEvents(callback) {
                 event.push(apt)
             } else{
                 InnerLoop:
-                for (let index in event){
+                for (let index =0; index < event.length; ++index){
                     if (moment(moment(apt.start_date).format('MM/DD/YYYY HH:MM')).isBefore(moment(event[index].start_date).format('MM/DD/YYYY HH:MM'))){
+                        console.log(event[index].start_date)
                         event.insert(index, apt)
                         inserted = true
                         break InnerLoop

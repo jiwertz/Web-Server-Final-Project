@@ -2,7 +2,7 @@
     <div class="form-group" style="margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
         <h1 style="color:white;border:solid;border-color:white">My Appointments</h1>
     </div>
-    <div class="form-group" style="height:92%; overflow-y: auto; overflow-x:hidden; margin-bottom:0; margin-top:0; padding-top:0; padding-bottom:0;">
+    <div class="form-group" style="height:90%; overflow-y: auto; overflow-x:hidden; margin-bottom:0; margin-top:0; padding-top:0; padding-bottom:0;">
         <% for (let subdata of data) { %> 
             <% if(moment(moment(new Date()).format('MM/DD/YYY')).isSameOrBefore(moment(new Date(subdata.start_date)).format('MM/DD/YYY'))) { %>
                 <% if (subdata.booked && (user.isFaculty || user._id == subdata.studentID._id)) { %>
