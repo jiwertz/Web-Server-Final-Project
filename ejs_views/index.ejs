@@ -61,18 +61,13 @@
         <div style="color:white">
             <h1><b>Welcome to the UCO CS Advisement Scheduling Page</h1></b>
         </div>
-        <% if(verifyMessage && verifyMessage.length > 0) { %>
-            <div class="alert alert-danger" role="alert"><%= verifyMessage %></div>
-        <% } %>
-        <% if(loginMessage && loginMessage.length > 0) { %>
-            <div class="alert alert-danger" role="alert"><%= loginMessage %></div>
-        <% } %>
 
-        <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
         <% if(user){ %>
             <input type="hidden" id="isFaculty" value="<%= user.isFaculty %>">
             <input type="hidden" id="isFacultyVerified" value="<%= user.facultyVerified %>"> 
             <input type="hidden" id="isVerified" value="<%= user.verified %>">
+
+            <% include ./partials/pendingAppointments %>
         <% } else {%>
             <input type="hidden" id="isFaculty" value="false">
             <input type="hidden" id="isFacultyVerified" value="false">
@@ -95,6 +90,18 @@
             <div class="dhx_cal_data">
             </div>
         </div>
+        <br>
+        <% if(verifyMessage && verifyMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= verifyMessage %></div>
+        <% } %>
+        <% if(loginMessage && loginMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= loginMessage %></div>
+        <% } %>
+        <% if(registerMessage && registerMessage.length > 0) { %>
+            <div class="alert alert-danger" role="alert"><%= registerMessage %></div>
+        <% } %>
+
+        <input type="hidden" id="eventData" value="<%= JSON.stringify(data) %>">
 
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

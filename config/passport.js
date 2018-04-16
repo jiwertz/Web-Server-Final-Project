@@ -89,7 +89,7 @@ passport.use('localsignup',
                         </body>
                     </html>
                     `
-                    Mailer.sendMail(req.body.email,"UCO CS Advisement Registration", msg)
+                    Mailer.sendMail(req.body.email,"UCO CS Advisement Registration", msg, false)
                     let user = new UserModel(newUser)
                     req.session.userInfo = user
                     return callback(null, newUser, req.flash('signupsuccess', 'Sign up successful! Please check your email for a verification code!'));

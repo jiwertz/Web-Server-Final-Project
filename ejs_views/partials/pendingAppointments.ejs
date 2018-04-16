@@ -1,0 +1,54 @@
+<div class="form-group" style="width:42%; height:80%; position:absolute; right: 20px; border-style: inset;border-color:white">
+    <div class="form-group" style="margin-bottom:0;margin-top:0;padding-top:0;padding-bottom:0;">
+        <h1 style="color:white;border:solid;border-color:white">My Appointments</h1>
+    </div>
+    <div class="form-group" style="height:90%; overflow-y: auto; overflow-x:hidden; margin-bottom:0; margin-top:0; padding-top:0; padding-bottom:0;">
+        <% for (let subdata of data) { %> 
+            <% if(moment(moment(new Date()).format('MM/DD/YYY')).isSameOrBefore(moment(new Date(subdata.start_date)).format('MM/DD/YYY'))) { %>
+                <% if (subdata.booked && (user.isFaculty || user._id == subdata.studentID._id)) { %>
+                    <div class="row">
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <div class="col-1">
+                            <% if(subdata.studentID.profilePic != "") { %>
+                                <div class="row-3">
+                                    <img src='<%= subdata.studentID.profilePic.replace("/public","") %>' width="60" height="60" style="float: right">
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="col-8">
+                            <div class="row-1">
+                                <label for="desc" style="text-align: right; color:#e5b509">Student: </label> &nbsp;
+                                <label id="desc" name="desc" style="text-align: right; color:#e5b509"> <%= subdata.studentID.firstName %> <%= subdata.studentID.lastName %></label>
+                            </div>
+                            <div class="row-1">
+                                <label for="start_date" style="text-align: right; color:#e5b509">Start Time: </label> &nbsp;
+                                <label id="start_date" name="start_date" style="text-align: right; color:#e5b509"> <%= moment(subdata.start_date).format('MM/DD/YYYY hh:mm A') %></label>
+                            </div>
+
+                            <div class="row-1">
+                                <label for="end_date" style="text-align: right; color:#e5b509">End Time: </label> &nbsp;
+                                <label id="end_date" name="end_date" style="text-align: right; color:#e5b509"> <%= moment(subdata.end_date).format('MM/DD/YYYY hh:mm A') %></label>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="row-1">
+                                <% if (user && !user.isFaculty) { %>
+                                    <form action="/unregisterAppointment" method="POST">
+                                        <input name="id" id="id" type="hidden" value="<%= subdata.id %>">
+                                        <input type="submit" class="btn btn-danger" style="width:80px; height: 25px; margin:0; padding:0" value="Cancel">
+                                    </form>
+                                <% } else {%>
+                                    <form action="/remove" method="POST">
+                                        <input name="id" id="id" type="hidden" value="<%= subdata.id %>">
+                                        <input type="submit" class="btn btn-danger" style="width:80px; height: 25px; margin:0; padding:0" value="Delete">
+                                    </form>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <hr style="height:2px; border:none; color:white; background-color:white; margin-bottom:3px;margin-top:3px;padding-top:0px;padding-bottom:0px">
+                <% } %>
+            <% } %>
+        <% } %>
+    </div>
+</div>
