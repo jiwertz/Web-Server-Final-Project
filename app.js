@@ -140,7 +140,7 @@ app.post("/editProfile", (req, res) => {
             update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
         }
         if (req.body.password != '') {
-            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+            update.$set.password = bcrypt.hashSync(req.body.password, 10)
         }
         UserSchema.findOneAndUpdate(query, update, (err, result) => {
             if (err) {
@@ -185,7 +185,7 @@ app.post("/adminEditProfile", (req, res) => {
             update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
         }
         if (req.body.password != '') {
-            update.$set.password = bcrypt.hashSync(req.body.password, saltCount)
+            update.$set.password = bcrypt.hashSync(req.body.password, 10)
         }
         UserSchema.findOneAndUpdate(query, update, (err, result) => {
             if (err) {
@@ -500,7 +500,6 @@ app.post("/add", (req, res)=>
             })
             event.save((err, result)=>{
                 if (err){
-                    console.log(err)
                     return res.status(500).send('<h1> Internal Database Error</h1>')
                 }
                 return res.redirect("/")
@@ -534,7 +533,6 @@ function getCalendarEvents(callback) {
                 InnerLoop:
                 for (let index =0; index < event.length; ++index){
                     if (moment(moment(apt.start_date).format('MM/DD/YYYY HH:MM')).isBefore(moment(event[index].start_date).format('MM/DD/YYYY HH:MM'))){
-                        console.log(event[index].start_date)
                         event.insert(index, apt)
                         inserted = true
                         break InnerLoop
