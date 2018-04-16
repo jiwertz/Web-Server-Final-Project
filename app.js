@@ -231,6 +231,41 @@ app.get("/addAppointments", isLoggedIn, (req, res)=>
         res.redirect("/")
     }
 })
+
+app.get("/viewUsers", isLoggedIn, (req, res)=>
+{
+    let user = req.session.userInfo
+    if (user.isFaculty){
+        
+        UserSchema.find({}, (err, results) => {
+            if (err) {
+                return res.render.status(500).send('<h1>Error</h1>');
+            }
+            res.render('viewUsers', {results, user, UserSchema});
+        });
+    }
+    else{
+        res.redirect("/")
+    }
+})
+app.get("/admin_ProfileEdit", isLoggedIn, (req, res)=>
+{
+    let user = req.session.userInfo
+    if (user.isFaculty){
+        
+        UserSchema.find({}, (err, results) => {
+            if (err) {
+                return res.render.status(500).send('<h1>Error</h1>');
+            }
+            const users = JSON.parse(req.query.userInfo);
+	        res.render('admin_ProfileEdit', {users, user});
+        });
+    }
+    else{
+        res.redirect("/")
+    }
+})
+
 app.post("/addAppointments", (req, res)=>
 {
 //    let stdt= new Date(new Date(appointment_entry.start_date)-offset).toISOString().substring(0,16).replace('T',' ').replace("-","/").replace("-","/")
@@ -327,6 +362,14 @@ app.post("/remove", (req, res)=>
     })
 
 })
+app.get('/removeUser', (req, res) => {
+	UserSchema.remove({_id: req.query._id}, (err, results) => {
+		if (err) {
+			return res.status(500).send('<h1>Remove error</h1>');
+		}
+		return res.redirect('/');
+	});
+});
 app.post("/add", (req, res)=>
 {
     let query = {_id: req.body.id}
