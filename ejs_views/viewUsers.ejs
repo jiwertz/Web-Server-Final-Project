@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <link rel="stylesheet" href="../Styles/DefaultStyle.css"  type="text/css">
+        <title>Users</title>
+    </head>
+    <body>
+            <h1>View User Page</h1>
+                <table class="table table-hover table-dark">
+                    <thead>
+                        <tr>
+                        <th scope="col">Last Name</th>
+                        <th scope="col">Fist Name</th>
+                        <th scope="col">StudentID</th>
+                        <th scope="col">Faculty</th>
+                        <th scope="col">Update</th>
+                        <th scope="col">Remove</th>
+                        </tr>
+                    </thead>
+                <tbody>
+                        <% for (const users of results) { %>
+                            <tr>
+                                <td><%= users.lastName%></td>
+                                <td><%= users.firstName%></td>
+                                <td><%= users.studentID%></td>
+                                <td><%= users.isFaculty%></td>
+                                <td>
+                                            <form action="/admin_ProfileEdit" method="get">
+                                                <input type="hidden" name="userInfo" value='<%= JSON.stringify(users) %>' >
+                                                <button type="submit" class="btn btn-primary">Update</button>
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <form action="/removeUser" method="get">
+                                                <input type="hidden" name="_id" value="<%= users._id %>">
+                                                <button type="submit" class="btn btn-danger">Remove</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% } %>
+
+</html>

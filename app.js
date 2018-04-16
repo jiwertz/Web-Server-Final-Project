@@ -341,6 +341,40 @@ app.get("/addAppointments", isLoggedIn, (req, res) => {
     }
 })
 
+app.get("/viewUsers", isLoggedIn, (req, res)=>
+{
+    let user = req.session.userInfo
+    if (user.isFaculty){
+        
+        UserSchema.find({}, (err, results) => {
+            if (err) {
+                return res.render.status(500).send('<h1>Error</h1>');
+            }
+            res.render('viewUsers', {results, user, UserSchema});
+        });
+    }
+    else{
+        res.redirect("/")
+    }
+})
+app.get("/admin_ProfileEdit", isLoggedIn, (req, res)=>
+{
+    let user = req.session.userInfo
+    if (user.isFaculty){
+        
+        UserSchema.find({}, (err, results) => {
+            if (err) {
+                return res.render.status(500).send('<h1>Error</h1>');
+            }
+            const users = JSON.parse(req.query.userInfo);
+	        res.render('admin_ProfileEdit', {users, user});
+        });
+    }
+    else{
+        res.redirect("/")
+    }
+})
+
 app.post("/addAppointments", (req, res) => {
     let MINUTES = 0;
     let HOURS = parseInt(req.body.end_date.substring(0, 2)) - parseInt(req.body.start_date.substring(0, 2))
@@ -393,6 +427,49 @@ app.post("/addAppointments", (req, res) => {
     }
     AppointmentSchema.insertMany(data)
     res.redirect("/")
+})
+
+app.get('/removeUser', (req, res) => {
+	UserSchema.remove({_id: req.query._id}, (err, results) => {
+		if (err) {
+			return res.status(500).send('<h1>Remove error</h1>');
+		}
+		return res.redirect('/');
+	});
+});
+app.post("/add", (req, res)=>
+{
+    let query = {_id: req.body.id}
+    let update= {
+        $set: {
+            start_date: new Date(req.body.start_date),
+            end_date: new Date(req.body.end_date),
+            text: req.body.text,
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query, update,(err, result)=>{
+        if (err){
+            let event = new AppointmentSchema({
+                start_date: new Date(req.body.start_date),
+                end_date: new Date(req.body.end_date),
+                text: req.body.text,
+                studentID: '',
+                booked: false
+            })
+            event.save((err, result)=>{
+                if (err){
+                    console.log(err)
+                    return res.status(500).send('<h1> Internal Database Error</h1>')
+                }
+                return res.redirect("/")
+            })
+        }
+        else{
+            return res.redirect("/")
+        }
+        
+    })
+    
 })
 
 Array.prototype.insert = function ( index, item ) {
