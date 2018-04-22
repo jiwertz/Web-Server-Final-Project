@@ -20,6 +20,7 @@ app.set('views', './ejs_views')
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }))
 
+const ServerEmailSchema = require('./models/ServerEmailSchema')
 //Import class used to update the server's email authentication
 const UpdateServerEmail = require('./models/UpdateServerEmail')
 //This is an example of how to use the UpdateServerEmail function
@@ -61,61 +62,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 require('./config/passport');
-
-app.post("/SignUpAdvisement", isLoggedIn, (req, res) => 
-{
-    let user = UserModel.deserialize(req.session.userInfo)
-    let query = {_id: req.body.id}
-    let update = {
-        $set: {
-            studentID: user._id,
-            booked: true
-        }
-    }
-    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
-        if (err){
-            return res.status(500).send('<h1>Internal DB Error</h1>')
-        }
-        Mailer.sendMail(
-            user.email,
-            "Appointment Registration",
-            `
-            <html>
-            <body style="background-color:#0b2d63; margin:8px; padding:8px">
-                <font size="6" color="#e5b509">
-                    You have registred for a CS Advisement Appointment on
-                    ${moment(result.start_date).format('MMM Do YYYY')} 
-                    from ${moment(result.start_date).format('hh:mm A')} to ${moment(result.end_date).format('hh:mm A')}.
-                    <br><br>
-                    Please fill out the attached document
-                    and bring it with you to the appointment or email it to the advisor before the appointment.
-                </font
-            </body>
-            </html>
-            `,
-            true
-        )
-        req.flash('registerSuccess', 'Successfully Registered For An Appointment On ' + result.start_date + '!')
-        res.redirect("/")
-    })
-})
-
-app.post('/unregisterAppointment',(req,res)=>{
-    let query = {_id: req.body.id}
-    let update = {
-        $set: {
-            studentID: null,
-            booked: false
-        }
-    }
-    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
-        if (err){
-            return res.status(500).send('<h1>Internal DB Error</h1>')
-        }
-        req.flash('registerSuccess', 'Successfully Unregistred For An Appointment On ' + result.start_date + '!')
-        res.redirect("/")
-    })
-})
 
 app.post("/editProfile", (req, res) => {
     if (!req.session.userInfo) {
@@ -199,61 +145,6 @@ app.post("/adminEditProfile", (req, res) => {
             }
             res.redirect("/viewUsers")
         })
-    })
-})
-
-app.post("/remove", (req, res) => {
-    let query = { _id: req.body.id }
-    AppointmentSchema.findOne(query).populate("studentID").exec((er, resl)=>{
-        if (er){
-            return res.status(500).send('<h1>Error attempting to remove from database</h1>')
-        }
-        Mailer.sendMail(
-            resl.studentID.email,
-            "CS Advisement Appointment Cancelled",
-            "<h1>Your CS Advisement appointment for " + resl.start_date + " to " + resl.end_date + " was cancelled. Please sign up for a new appointment. </h1>",
-            false
-        )
-        AppointmentSchema.remove(query, (err, results) => {
-            if (err) {
-                return res.status(500).send('<h1>Error attempting to remove from database</h1>')
-            }
-            else {
-                res.redirect('/');
-            }
-        })
-    })
-})
-
-app.post("/add", (req, res) => {
-    let query = { _id: req.body.id }
-    let update = {
-        $set: {
-            start_date: new Date(req.body.start_date),
-            end_date: new Date(req.body.end_date),
-            text: req.body.text,
-        }
-    }
-    AppointmentSchema.findOneAndUpdate(query, update, (err, result) => {
-        if (err) {
-            let event = new AppointmentSchema({
-                start_date: new Date(req.body.start_date),
-                end_date: new Date(req.body.end_date),
-                text: req.body.text,
-                studentID: '',
-                booked: false
-            })
-            event.save((err, result) => {
-                if (err) {
-                    return res.status(500).send('<h1> Internal Database Error</h1>')
-                }
-                return res.redirect("/")
-            })
-        }
-        else {
-            return res.redirect("/")
-        }
-
     })
 })
 
@@ -360,9 +251,160 @@ app.get("/editProfile", isLoggedIn, (req, res) => {
     res.render('ProfileEdit', { user, csrfToken: req.csrfToken() })
 })
 
+app.post("/updateComment", isLoggedIn, (req,res)=>{
+    let query = {_id: req.body.id}
+    let update = {
+        $set: {
+            studentComment: req.body.studentComment
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
+        if (err){
+            return res.status(500).send('<h1>Internal DB Error</h1>')
+        }
+        res.redirect("/")
+    });
+})
+
+app.post('/unregisterAppointment',(req,res)=>{
+    let query = {_id: req.body.id}
+    let update = {
+        $set: {
+            studentID: null,
+            booked: false,
+            studentComment: null
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
+        if (err){
+            return res.status(500).send('<h1>Internal DB Error</h1>')
+        }
+        req.flash('registerSuccess', 'Successfully Unregistred For An Appointment On ' + result.start_date + '!')
+        res.redirect("/")
+    })
+})
+
+app.post("/remove", (req, res) => {
+    console.log(req.body)
+    let query = { _id: req.body.id }
+    AppointmentSchema.findOne(query).populate("studentID").exec((er, resl)=>{
+        if (er){
+            return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+        }
+        if (resl.email != null){
+            Mailer.sendMail(
+                resl.studentID.email,
+                "CS Advisement Appointment Cancelled",
+                "<h1>Your CS Advisement appointment for " + resl.start_date + " to " + resl.end_date + " was cancelled. Please sign up for a new appointment. </h1>",
+                false
+            )
+        }
+        AppointmentSchema.remove(query, (err, results) => {
+            if (err) {
+                return res.status(500).send('<h1>Error attempting to remove from database</h1>')
+            }
+            else {
+                res.redirect('/');
+            }
+        })
+    })
+})
+
+app.post("/add", (req, res) => {
+    let query = { _id: req.body.id }
+    let update = {
+        $set: {
+            start_date: new Date(req.body.start_date),
+            end_date: new Date(req.body.end_date),
+            text: req.body.text,
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query, update, (err, result) => {
+        if (err) {
+            let event = new AppointmentSchema({
+                start_date: new Date(req.body.start_date),
+                end_date: new Date(req.body.end_date),
+                text: req.body.text,
+                studentID: '',
+                booked: false,
+                studentComment: null
+            })
+            event.save((err, result) => {
+                if (err) {
+                    return res.status(500).send('<h1> Internal Database Error</h1>')
+                }
+                return res.redirect("/")
+            })
+        }
+        else {
+            return res.redirect("/")
+        }
+
+    })
+})
+
+app.post("/SignUpAdvisement", isLoggedIn, (req, res) => 
+{
+    let user = UserModel.deserialize(req.session.userInfo)
+    let query = {_id: req.body.id}
+    let update = {
+        $set: {
+            studentID: user._id,
+            booked: true,
+            studentComment: req.body.studentComment
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query,update,(err, result)=>{
+        if (err){
+            return res.status(500).send('<h1>Internal DB Error</h1>')
+        }
+        Mailer.sendMail(
+            user.email,
+            "Appointment Registration",
+            `
+            <html>
+            <body style="background-color:#0b2d63; margin:8px; padding:8px">
+                <font size="6" color="#e5b509">
+                    You have registred for a CS Advisement Appointment on
+                    ${moment(result.start_date).format('MMM Do YYYY')} 
+                    from ${moment(result.start_date).format('hh:mm A')} to ${moment(result.end_date).format('hh:mm A')}.
+                    <br><br>
+                    Please fill out the attached document
+                    and bring it with you to the appointment or email it to the advisor before the appointment.
+                </font
+            </body>
+            </html>
+            `,
+            true
+        )
+        req.flash('registerSuccess', 'Successfully Registered For An Appointment On ' + result.start_date + '!')
+        res.redirect("/")
+    })
+})
+
+const emailInquirer = require('./public/Utilities/inquirer')
+//This function will ask the user to enter an email and it's password
+// to use for the server's email.
+const inquire = async()=>{
+    const credentials = await emailInquirer.getServerEmailInfo()
+    UpdateServerEmail(credentials.email, credentials.password)
+    //Clear the console to make sure the entered password gets hidden
+    process.stdout.write('\033c');
+    console.log('Server is running at port', port)
+}
+
 const port = process.env.PORT || 3000
 app.listen(port, () => {
-    console.log('Server is running at port', port)
+
+    ServerEmailSchema.findOne({},(err,result)=>{
+        if(result == null){
+            console.log("No Server Email Exists! Please supply one now. " +
+                "(Note: only email accounts managed by the gmail service will work with this server")
+            inquire();
+        } else{
+            console.log('Server is running at port', port)
+        }
+    })
 })
 
 function isLoggedIn(req, res, next) {
@@ -457,11 +499,13 @@ app.post("/addAppointments", (req, res) => {
         let final_ending_date = req.body.date + " " + (endHOURS + ":" + parseInt(endMINUTES))
 
         let obj = {
-            text: "appointment " + (x + 1),
+            //text: "appointment " + (x + 1),
+            text: "LEAVE COMMENTS: IN-PERSON or SKYPE. For Skype Video conference, email Enroll.docx at least 2 hours before the appointment time. For in-person meeting in MCS132 (Dr. Sung's Office), email or bring in the printed copy.",
             start_date: new Date(final_beginning_date),
             end_date: new Date(final_ending_date),
             studentID: null,
-            booked: false
+            booked: false,
+            studentComment: null
         };
         data.push(obj)
         begMINUTES = begMINUTES + 10
@@ -479,39 +523,6 @@ app.get('/removeUser', (req, res) => {
 		return res.redirect('/viewUsers');
 	});
 });
-app.post("/add", (req, res)=>
-{
-    let query = {_id: req.body.id}
-    let update= {
-        $set: {
-            start_date: new Date(req.body.start_date),
-            end_date: new Date(req.body.end_date),
-            text: req.body.text,
-        }
-    }
-    AppointmentSchema.findOneAndUpdate(query, update,(err, result)=>{
-        if (err){
-            let event = new AppointmentSchema({
-                start_date: new Date(req.body.start_date),
-                end_date: new Date(req.body.end_date),
-                text: req.body.text,
-                studentID: '',
-                booked: false
-            })
-            event.save((err, result)=>{
-                if (err){
-                    return res.status(500).send('<h1> Internal Database Error</h1>')
-                }
-                return res.redirect("/")
-            })
-        }
-        else{
-            return res.redirect("/")
-        }
-        
-    })
-    
-})
 
 Array.prototype.insert = function ( index, item ) {
     this.splice( index, 0, item );

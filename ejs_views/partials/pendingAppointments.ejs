@@ -8,11 +8,9 @@
                 <% if (subdata.booked && subdata.studentID && (user.isFaculty || user._id == subdata.studentID._id)) { %>
                     <div class="row">
                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                        <div class="col-1">
+                        <div class="col-1" style="padding: 0; margin: 0">
                             <% if(subdata.studentID.profilePic != "") { %>
-                                <div class="row-3">
-                                    <img src='<%= subdata.studentID.profilePic.replace("/public","") %>' width="60" height="60" style="float: right">
-                                </div>
+                                <img src='<%= subdata.studentID.profilePic.replace("/public","") %>' width="60" height="60" style="float: right">
                             <% } %>
                         </div>
                         <div class="col-8">
@@ -29,16 +27,33 @@
                                 <label for="end_date" style="text-align: right; color:#e5b509">End Time: </label> &nbsp;
                                 <label id="end_date" name="end_date" style="text-align: right; color:#e5b509"> <%= moment(subdata.end_date).format('MM/DD/YYYY hh:mm A') %></label>
                             </div>
+                            <div class="row-1">
+                                <form action="/updateComment" method="POST">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <input name="id" id="id" type="hidden" value="<%= subdata.id %>">
+                                    <label for="studentComment" style="text-align: right; color: #e5b509">Student Comment:</label> &nbsp;
+                                    <select name="studentComment" id="studentComment" <% if (user && user.isFaculty) { %>disabled <% } %>>
+                                        <option value="" <% if(subdata.studentComment == null) { %> selected <% } %>> --Select One--</option>}
+                                        <option value="IN-PERSON"<% if(subdata.studentComment == "IN-PERSON") { %> selected <% } %>> IN-PERSON </option>}
+                                        <option value="SKYPE" <% if(subdata.studentComment == "SKYPE") { %> selected <% } %>> SKYPE </option>}
+                                    </select>
+                                    <% if (user && !user.isFaculty) { %>
+                                        <input type="submit" class="btn btn-success" value="Update" style="width:80px; height: 25px; margin:0; padding:0">
+                                    <% } %>
+                                </form>
+                            </div>
                         </div>
                         <div class="col">
                             <div class="row-1">
                                 <% if (user && !user.isFaculty) { %>
                                     <form action="/unregisterAppointment" method="POST">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                         <input name="id" id="id" type="hidden" value="<%= subdata.id %>">
                                         <input type="submit" class="btn btn-danger" style="width:80px; height: 25px; margin:0; padding:0" value="Cancel">
                                     </form>
                                 <% } else {%>
                                     <form action="/remove" method="POST">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                         <input name="id" id="id" type="hidden" value="<%= subdata.id %>">
                                         <input type="submit" class="btn btn-danger" style="width:80px; height: 25px; margin:0; padding:0" value="Delete">
                                     </form>

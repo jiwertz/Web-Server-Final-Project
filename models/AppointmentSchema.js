@@ -7,7 +7,8 @@ const appointmentSchema = new Schema({
     start_date: String,
     end_date: String,
     studentID: {type:Schema.Types.ObjectId, ref:'UserSchema'},
-    booked: Boolean
+    booked: Boolean,
+    studentComment: String
 });
 
 module.exports = mongoose.model('AppointmentSchema',appointmentSchema);

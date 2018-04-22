@@ -12,6 +12,8 @@ class AppointmentModel{
         this.end_date = etdt.substring(5,10) + '/' +etdt.substring(0,4) + ' ' + etdt.substring(11,16)
         this.studentID = appointment_entry.studentID
         this.booked = appointment_entry.booked
+        this.studentComment = appointment_entry.studentComment
+        
     }
 
     serialize(){
@@ -21,7 +23,8 @@ class AppointmentModel{
             start_date: this.start_date,
             end_date: this.end_date,
             studentID: this.studentID ,
-            booked: (this.booked) ?"1":"0"
+            booked: (this.booked) ?"1":"0",
+            studentComment: this.studentComment
         }
     }
 
@@ -32,7 +35,8 @@ class AppointmentModel{
             start_date: sAppointment.start_date ,
             end_date: sAppointment.end_date ,
             studentID: sAppointment.studentID ,
-            booked: (sAppointment.booked=="1") ?true:false
+            booked: (sAppointment.booked=="1") ?true:false,
+            studentComment: sAppointment.studentComment
         })
     }
 }

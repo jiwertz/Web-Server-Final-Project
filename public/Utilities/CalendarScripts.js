@@ -108,6 +108,15 @@ function init(mode) {
         scheduler.config.buttons_left = ["dhx_cancel_btn"]
     }
 
+    scheduler.config.lightbox.sections=[
+        {name: "description", height: 150, map_to:"text", type:"textarea", focus:true},
+        { name:"Comment", height:30, type:"select", map_to:"studentComment", options:[
+            {key:"IN-PERSON", label:"IN-PERSON"},
+            {key:"SKYPE", label:"SKYPE"}
+         ]},
+         { name:"time", height:72, type:"time", map_to:"auto"}
+    ]
+
     scheduler.attachEvent("onLightbox",function(id){
         //If current user is not a verified faculty member, then lock the description and time fields.
         if (!isFaculty()){
@@ -120,17 +129,27 @@ function init(mode) {
             for (let i = 0; i < timeArea.length; i++){
                 timeArea[i].setAttribute("disabled",true)
             }
+        ;}
+        if (!isLoggedIn()){
+            let commentarea = scheduler.formSection("Comment")
+            let comment = commentarea.node.querySelector("select")
+            comment.setAttribute("disabled",true)
         }
     })
 
     //Add an event listener that prevents the light box from appearing if the event is already booked.
     scheduler.attachEvent("onBeforeLightBox", function(id){
-        let event = scheduler.getEvent(id)
-        if (event.booked == true){
-            return false;   
+        if (isStudent() || !isLoggedIn()){
+            let event = scheduler.getEvent(id)
+            if (event.booked == true){
+                return false;   
+            } 
+            else{
+                return true
+            }
         } 
         else{
-            return true
+            return true;
         }
     })
     
@@ -143,7 +162,16 @@ function init(mode) {
             form.setAttribute("method", "POST")
             form.setAttribute("action", "/SignUpAdvisement")
             let appointmentID = createHiddenInput("id",scheduler.getState().lightbox_id)
+            let studentComment = createHiddenInput("studentComment",scheduler.formSection('Comment').getValue())
+            if (studentComment.value==""){
+                alert("Please select a comment first!")
+                return false;
+            }
+            let csrfElement = document.getElementById("hidden_csrf")
+            let csrf = createHiddenInput("_csrf",csrfElement.value)
             form.appendChild(appointmentID)
+            form.appendChild(studentComment)
+            form.appendChild(csrf)
             document.body.appendChild(form)
             //Send the form with POST method to the server!!!
             form.submit()
@@ -187,10 +215,14 @@ function init(mode) {
         let startDate = createHiddenInput("start_date", e.start_date)
         let endDate = createHiddenInput("end_date", e.end_date)
         let text = createHiddenInput("text", e.text)
+        let csrfElement = document.getElementById("hidden_csrf")
+        let csrf = createHiddenInput("_csrf",csrfElement.value)
+
         form.appendChild(eventid)
         form.appendChild(startDate)
         form.appendChild(endDate)
         form.appendChild(text)
+        form.appendChild(csrf)
 
         document.body.appendChild(form)
         //Send the form with POST method to the server!!!
@@ -206,7 +238,10 @@ function init(mode) {
         form.setAttribute("method", "POST")
         form.setAttribute("action", "/remove")
         let eventid = createHiddenInput("id", id)
+        let csrfElement = document.getElementById("hidden_csrf")
+        let csrf = createHiddenInput("_csrf",csrfElement.value)
         form.appendChild(eventid)
+        form.appendChild(csrf)
         document.body.appendChild(form)
         //Send the form with POST method to the server!!!
         form.submit()
@@ -242,5 +277,13 @@ function isStudent(){
     }
     else{
         return false;
+    }
+}
+
+function isLoggedIn(){
+    if(!isFaculty() && !isStudent()){
+        return false;
+    } else{
+        return true;
     }
 }
