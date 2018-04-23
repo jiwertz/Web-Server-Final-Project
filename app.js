@@ -10,6 +10,7 @@ const csrf = require('csurf')
 const moment = require('moment') // This is used when rendering the index.ejs file to format the dates displayed from the pendingAppointments.ejs file
 moment.suppressDeprecationWarnings = true;
 
+const GenerateCode = require('./models/GenerateCode')
 const passport = require('passport')
 const flash = require('connect-flash')
 const cookieParser = require('cookie-parser')
@@ -251,6 +252,44 @@ app.get("/editProfile", isLoggedIn, (req, res) => {
     res.render('ProfileEdit', { user, csrfToken: req.csrfToken() })
 })
 
+app.get("/verifyFaculty", (req, res) => 
+{
+
+        const query = { _id: req.query._id }
+        let update = {
+            $set: {
+                facultyVerified: true
+            }
+        }
+        UserSchema.findOneAndUpdate(query, update, (err, result) => {
+            res.redirect("/viewUsers")
+    })
+})
+
+app.post("/resetPassword", (req, res) => 
+{
+    let password = GenerateCode.getId()
+    bcrypt.hash(password, 10, (err, hash) => {
+
+        let query = {
+            _id: req.body.userInfo
+        }
+
+        UserSchema.findOne(query, (error2, result2) => {
+            let update = {
+                $set: {
+                     password: hash
+                }
+            }
+
+            UserSchema.findOneAndUpdate(query, update, (error, result) =>{
+                Mailer.sendMail(result2.email, "password reset", `You're password for UCO CS Advisment has been reset to ${password}`)
+                res.redirect("/viewUsers")
+            })
+        })
+    });
+})
+
 app.post("/updateComment", isLoggedIn, (req,res)=>{
     let query = {_id: req.body.id}
     let update = {
@@ -434,7 +473,7 @@ app.get("/viewUsers", isLoggedIn, (req, res)=>
             if (err) {
                 return res.render.status(500).send('<h1>Error</h1>');
             }
-            res.render('viewUsers', {results, user, UserSchema});
+            res.render('viewUsers', {results, user, UserSchema, csrfToken: req.csrfToken()});
         });
     }
     else{
@@ -515,6 +554,7 @@ app.post("/addAppointments", (req, res) => {
     res.redirect("/")
 })
 
+
 app.get('/removeUser', (req, res) => {
 	UserSchema.remove({_id: req.query._id}, (err, results) => {
 		if (err) {
@@ -523,6 +563,40 @@ app.get('/removeUser', (req, res) => {
 		return res.redirect('/viewUsers');
 	});
 });
+
+app.post("/add", (req, res)=>
+{
+    let query = {_id: req.body.id}
+    let update= {
+        $set: {
+            start_date: new Date(req.body.start_date),
+            end_date: new Date(req.body.end_date),
+            text: req.body.text,
+        }
+    }
+    AppointmentSchema.findOneAndUpdate(query, update,(err, result)=>{
+        if (err){
+            let event = new AppointmentSchema({
+                start_date: new Date(req.body.start_date),
+                end_date: new Date(req.body.end_date),
+                text: req.body.text,
+                studentID: '',
+                booked: false
+            })
+            event.save((err, result)=>{
+                if (err){
+                    return res.status(500).send('<h1> Internal Database Error</h1>')
+                }
+                return res.redirect("/")
+            })
+        }
+        else{
+            return res.redirect("/")
+        }
+        
+    })
+    
+})
 
 Array.prototype.insert = function ( index, item ) {
     this.splice( index, 0, item );

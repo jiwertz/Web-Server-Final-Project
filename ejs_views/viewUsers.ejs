@@ -56,6 +56,7 @@
                 <th scope="col">Faculty</th>
                 <th scope="col">Update</th>
                 <th scope="col">Remove</th>
+                <th scope="col">Verify for Faculty</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,17 +67,28 @@
                         <td><%= users.studentID%></td>
                         <td><%= users.isFaculty%></td>
                         <td>
-                        <form action="/admin_ProfileEdit" method="get">
-                            <input type="hidden" name="userInfo" value='<%= JSON.stringify(users) %>' >
-                            <button type="submit" class="btn btn-primary">Update</button>
+                        <form action="/resetPassword" method="post">
+                            <input type="hidden" name="userInfo" value='<%= users._id %>' >
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button type="submit" class="btn btn-primary">Change Password</button>
                         </form>
                         </td>
                         <td>
                             <form action="/removeUser" method="get">
                                 <input type="hidden" name="_id" value="<%= users._id %>">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                 <button type="submit" class="btn btn-danger">Remove</button>
                             </form>
                         </td>
+                        <% if (users.isFaculty && users.facultyVerified == false) { %>
+                            <td>
+                                <form action="/verifyFaculty" method="get">
+                                    <input type="hidden" name="_id" value="<%= users._id %>">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn btn-danger">Verify</button>
+                                </form>
+                            </td>
+                        <% } %>
                     </tr>
                 <% } %>
             </tbody>
