@@ -40,7 +40,7 @@
             <div class="alert alert-danger" role="alert">Verification Error: <%= messages %></div>
             <br>
         <% } %>
-        <form method="POST" action="/verifyCode>
+        <form method="POST" action="/verifyCode">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             &nbsp;&nbsp;&nbsp;&nbsp;
             <input type="text" id="code" name ="code" maxlength="6" size="8">

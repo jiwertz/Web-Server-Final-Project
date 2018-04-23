@@ -10,7 +10,6 @@ const csrf = require('csurf')
 const moment = require('moment') // This is used when rendering the index.ejs file to format the dates displayed from the pendingAppointments.ejs file
 moment.suppressDeprecationWarnings = true;
 
-const GenerateCode = require('./models/GenerateCode')
 const passport = require('passport')
 const flash = require('connect-flash')
 const cookieParser = require('cookie-parser')
@@ -48,6 +47,8 @@ const UserSchema = require('./models/UserSchema')
 const UserModel = require('./models/UserModel')
 const AppointmentSchema = require('./models/AppointmentSchema')
 const AppointmentModel = require('./models/AppointmentModel')
+
+const GenerateCode = require('./models/GenerateCode')
 
 app.use(session({
     secret: 'UCOCSADVISEMENT',
@@ -105,46 +106,6 @@ app.post("/editProfile", (req, res) => {
             }
             req.session.userInfo = user.serialize()
             res.redirect("/")
-        })
-    })
-})
-
-app.post("/adminEditProfile", (req, res) => {
-    if (!req.session.userInfo) {
-        req.redirect("/")
-    }
-    multerUtility.uploadPicture(req, res, (err) => {
-        if (err) {
-            return res.status(500).send('<h1>Unable to upload file to server</h1>')
-        }
-        const query = { _id: req.body._id }
-        let update = {
-            $set: {
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                email: req.body.email,
-                facultyID: req.body.facultyID,
-                studentID: req.body.studentID,
-                majorCode: req.body.majorCode,
-            }
-        }
-        if (req.file) {
-            update.$set.profilePic = multerUtility.uploadImageDir + "/" + req.file.filename
-        }
-        if (req.body.password != '') {
-            update.$set.password = bcrypt.hashSync(req.body.password, 10)
-        }
-        UserSchema.findOneAndUpdate(query, update, (err, result) => {
-            if (err) {
-                fs.unlink(multerUtility.uploadImageDir + "/" + req.file.filename)
-                return res.status(500).send('<h1>Internal DB Error</h1>')
-            }
-            if (req.file) {
-                if (req.body.image_path != '') {
-                    fs.unlink(req.body.image_path)
-                }
-            }
-            res.redirect("/viewUsers")
         })
     })
 })
@@ -242,7 +203,7 @@ app.get("/calendar", (req, res) => {
         user = UserModel.deserialize(req.session.userInfo)
     }
     getCalendarEvents((err, data) => {
-        res.render('calendar', { user, data })
+        res.render('calendar', { user, data, csrfToken: req.csrfToken() })
     })
 
 })
@@ -284,6 +245,7 @@ app.post("/resetPassword", (req, res) =>
 
             UserSchema.findOneAndUpdate(query, update, (error, result) =>{
                 Mailer.sendMail(result2.email, "password reset", `You're password for UCO CS Advisment has been reset to ${password}`)
+                req.flash('passwordReset', 'Successfully Reset Password For ' + result.firstName + ' ' + result.lastName + '!')
                 res.redirect("/viewUsers")
             })
         })
@@ -473,24 +435,8 @@ app.get("/viewUsers", isLoggedIn, (req, res)=>
             if (err) {
                 return res.render.status(500).send('<h1>Error</h1>');
             }
-            res.render('viewUsers', {results, user, UserSchema, csrfToken: req.csrfToken()});
-        });
-    }
-    else{
-        res.redirect("/")
-    }
-})
-app.get("/admin_ProfileEdit", isLoggedIn, (req, res)=>
-{
-    let user = req.session.userInfo
-    if (user.isFaculty){
-        
-        UserSchema.find({}, (err, results) => {
-            if (err) {
-                return res.render.status(500).send('<h1>Error</h1>');
-            }
-            const users = JSON.parse(req.query.userInfo);
-	        res.render('admin_ProfileEdit', {users, user});
+            let passwordMessage = req.flash('passwordReset')
+            res.render('viewUsers', {results, user, UserSchema, csrfToken: req.csrfToken(), passwordMessage});
         });
     }
     else{
